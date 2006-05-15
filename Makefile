@@ -8,7 +8,7 @@ CC     ?= /usr/bin/gcc
 CCROSS ?= /usr/bin/i586-mingw32msvc-gcc
 CFLAGS  := -O2 -Wall -pipe -fomit-frame-pointer
 LDFLAGS := -Wl,-s,-O1
-ARCH    := -march=pentium-m
+ARCH    := -march=pentium-m -msse -mfpmath=sse
 
 all: canute canute.exe
 
