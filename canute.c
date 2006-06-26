@@ -19,8 +19,6 @@
 /* A single source file, compile and go. The same binary for both peers.      */
 /******************************************************************************/
 
-/* $Id */
-
 /* Constants */
 #define CANUTE_DEFAULT_PORT 1121
 #define CANUTE_BLOCK_SIZE   65536
@@ -579,7 +577,7 @@ char *basename (char *path)
 /*
  * NOTE: Contributed by MKD: http://www.claudiocamacho.org
  */
-#define BAR_DATA_WIDTH    46
+#define BAR_DATA_WIDTH    47
 #define BAR_DEFAULT_WIDTH 80
 #define BAR_MINIMUM_WIDTH (BAR_DATA_WIDTH + 4)
 
@@ -618,11 +616,11 @@ static int query_terminal_width (void)
  *
  * This is the format (one space margin at the end of the line):
  *
- * 999% [===...] 9,999,999,999 999.9 X/s  ETA 99:99:99
+ * 999% [===...] 9,999,999,999 9999.9 X/s  ETA 99:99:99
  *
- * Discount characters: 4 + 2 + 13 + 5 + 3 + 3 + 8 = 38
+ * Discount characters: 4 + 2 + 13 + 6 + 3 + 3 + 8 = 39
  * Discount spaces    : 1 + 1 +  1 + 1 + 2 + 1 + 1 =  8
- * Total: 46 (As defined by BAR_DATA_WIDTH)
+ * Total: 47 (As defined by BAR_DATA_WIDTH)
  */
 static void draw_bar (progress_t *pr)
 {
@@ -672,7 +670,7 @@ static void draw_bar (progress_t *pr)
     } else {
         mag = 0;
     }
-    sprintf (speed_str, "%3.1f", speed);
+    sprintf (speed_str, "%4.1f", speed);
 
     /* Beautify estimated time value */
     eta_min  = eta / 60;
@@ -683,10 +681,10 @@ static void draw_bar (progress_t *pr)
 
     /* Then print */
 #ifdef HASEFROCH
-    printf ("\r%3d%% [%s] %-13s %5s %s  ETA %s", (int) percent, bar, sent_str_b,
+    printf ("\r%3d%% [%s] %-13s %6s %s  ETA %s", (int) percent, bar, sent_str_b,
             speed_str, metric[mag], eta_str);
 #else
-    printf ("\033[1A%3d%% [%s] %-13s %5s %s  ETA %s\n", (int) percent, bar,
+    printf ("\033[1A%3d%% [%s] %-13s %6s %s  ETA %s\n", (int) percent, bar,
             sent_str_b, speed_str, metric[mag], eta_str);
 #endif
 }
