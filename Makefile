@@ -11,6 +11,7 @@ LDFLAGS := -Wl,-s,-O1
 ARCH    := -march=pentium-m -msse -mfpmath=sse
 
 all: canute canute.exe
+cl : ChangeLog
 
 install: $(HOME)/bin/canute
 
@@ -29,7 +30,10 @@ canute.exe: canute.obj
 %.obj: %.c
 	$(CCROSS) $(CFLAGS) -c -o $@ $^ 
 
-.PHONY: clean
+.PHONY: clean ChangeLog
 clean:
 	@-rm -fv *.o *.obj canute canute.exe
+
+ChangeLog:
+	hg log --style changelog >$@
 
