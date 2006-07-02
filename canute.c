@@ -20,6 +20,7 @@
 /******************************************************************************/
 
 /* Constants */
+#define CANUTE_VERSION_STR  "v0.5"
 #define CANUTE_DEFAULT_PORT 1121
 #define CANUTE_BLOCK_SIZE   65536
 #define CANUTE_NAME_LENGTH  247 /* This is measured so header_t is 256 bytes */
@@ -75,22 +76,9 @@ typedef struct s_Header {
 } header_t;
 
 /*
- * Progress information. Only used by feedback functions.
- */
-typedef struct s_Progress {
-    unsigned long  total_bytes;
-    unsigned long  completed_bytes;
-    unsigned long  last_transfer;
-    int            term_width;
-    float          last_delta;
-    struct timeval last_timestamp;
-    struct timeval init_time;
-} progress_t;
-
-/*
  * Send/receive buffer. Global may be uglier but is a lot handier.
  */
-static char buffer[CANUTE_BLOCK_SIZE];
+char buffer[CANUTE_BLOCK_SIZE];
 
 /* 
  * Auxiliary functions (prototypes)
@@ -111,8 +99,9 @@ SOCKET open_connection_client (char *host, uint16_t port);
 /*
  * Output feedback functions (prototypes)
  */
-void setup_progress (progress_t *pr, char *filename, unsigned long size);
-void show_progress  (progress_t *pr, unsigned long sent);
+void setup_progress  (char *filename, unsigned long size);
+void show_progress   (unsigned long increment);
+void finish_progress (void);
 
 
 /*****************************  MAIN FUNCTION  *****************************/
@@ -199,7 +188,6 @@ main (int argc, char **argv)
                 /***********************/
                 unsigned long received_bytes, total_bytes, b;
                 FILE *file;
-                progress_t pr_info;
 
                 /* Open connection */
                 if (strcmp (argv[1], "get") == 0) {
@@ -235,7 +223,7 @@ main (int argc, char **argv)
 
                         received_bytes = 0;
                         total_bytes    = ntohl (header.size);
-                        setup_progress (&pr_info, header.name, total_bytes);
+                        setup_progress (header.name, total_bytes);
 
                         while (received_bytes < total_bytes) {
                                 b = total_bytes - received_bytes;
@@ -245,10 +233,11 @@ main (int argc, char **argv)
                                 receive_data (sk, buffer, b);
                                 fwrite       (buffer, 1, b, file);
 
+                                show_progress (b);
                                 received_bytes += b;
-                                show_progress (&pr_info, received_bytes);
                         }
 
+                        finish_progress ();
                         fflush (file);
                         fclose (file);
                 } while (1);
@@ -276,14 +265,12 @@ main (int argc, char **argv)
 void
 help (char *argv0)
 {
-        printf (
-"Canute v0.4\n\n\
-Syntax:\n\
-\t%s send[:port]   <file/directory> [<file/directory> ...]\n\
-\t%s get[:port]    <host/IP>\n\
-\t%s sendto[:port] <host/IP> <file/directory> [<file/directory> ...]\n\
-\t%s getserv[:port]\n\
-", argv0, argv0, argv0, argv0);
+        printf ("Canute " CANUTE_VERSION_STR "\n\n"
+                "Syntax:\n"
+                "\t%s send[:port]   <file/directory> [<file/directory> ...]\n"
+                "\t%s get[:port]    <host/IP>\n"
+                "\t%s sendto[:port] <host/IP> <file/directory> [<file/directory> ...]\n"
+                "\t%s getserv[:port]\n", argv0, argv0, argv0, argv0);
         exit (EXIT_FAILURE);
 }
 
@@ -473,7 +460,6 @@ send_file (SOCKET sk, char *filename)
         int e;
         FILE *file;
         header_t header;
-        progress_t pr_info;
 
         file = fopen (filename, "rb");
         if (file == NULL) {
@@ -499,15 +485,16 @@ send_file (SOCKET sk, char *filename)
 
         /* Send the contents */
         sent_bytes = 0;
-        setup_progress (&pr_info, filename, total_bytes);
+        setup_progress (filename, total_bytes);
 
         while (sent_bytes < total_bytes) {
                 b = fread (buffer, 1, CANUTE_BLOCK_SIZE, file);
                 send_data (sk, buffer, b);
+                show_progress (b);
                 sent_bytes += b;
-                show_progress (&pr_info, sent_bytes);
         }
 
+        finish_progress ();
         fclose (file);
 }
 
@@ -528,7 +515,7 @@ send_dir (SOCKET sk, char *dirname)
         header_t header;
 
         dir = opendir (dirname);
-        if( dir == NULL ) 
+        if (dir == NULL) 
                 return 0; 
 
         /* Tell de receiver to create and change to "dir" */
@@ -628,9 +615,15 @@ basename (char *path)
 #define BAR_DEFAULT_WIDTH 80
 #define BAR_MINIMUM_WIDTH (BAR_DATA_WIDTH + 4)
 
-static const char *metric[] = { "B/s", "K/s", "M/s", "G/s" };
-static float delta[32]; /* This will keep the last 32 deltas */
-static int   delta_i;
+/* Progress state information */
+int            terminal_width;
+unsigned long  total_size;
+unsigned long  completed_size;
+struct timeval init_time;
+struct timeval last_time;
+float          delta[16];
+int            delta_index;
+
 
 /*
  * query_terminal_width
@@ -684,124 +677,168 @@ gettimeofday (struct timeval *time, struct timeval *dummy)
 
 
 /*
+ * elapsed_time
+ *
+ * Calculate the elapsed time from old_time to new_time in seconds as a float to
+ * maintain microsecond accuracy. In case elapsed time is less than a
+ * microsecond, then round it to that value so something greater than zero is
+ * returned.
+ */
+static float
+elapsed_time (struct timeval *old_time, struct timeval *new_time)
+{
+        struct timeval elapsed_time;
+        float          secs;
+
+        elapsed_time.tv_usec = new_time->tv_usec - old_time->tv_usec;
+        if (elapsed_time.tv_usec < 0) {
+                elapsed_time.tv_usec += 1000000;
+                old_time->tv_sec++;
+        }
+        elapsed_time.tv_sec = new_time->tv_sec - old_time->tv_sec;
+
+        secs = (float) elapsed_time.tv_sec + (float) elapsed_time.tv_usec*1.e-6;
+        /* I know, real numbers should never be tested for equality */
+        if (secs == 0.0)
+                secs = 1.e-6;
+
+        return secs;
+}
+
+
+/*
+ * pretty_number
+ *
+ * Return a beautified string representation of an integer. String will contain
+ * thousand separators.
+ */
+static char *
+pretty_number (unsigned long num)
+{
+        static char str[16];
+        char        ugly[16];
+        int         i, j;
+
+        i = snprintf (ugly, 16, "%lu", num);
+        j = i + (i - 1) / 3;
+        str[j] = '\0';
+        do {
+                str[--j] = ugly[--i]; if (i == 0) break;
+                str[--j] = ugly[--i]; if (i == 0) break;
+                str[--j] = ugly[--i]; if (i == 0) break;
+                str[--j] = ',';
+        } while (1);
+
+        return str;
+}
+
+
+/*
+ * pretty_time
+ *
+ * Return a beautified string representation of an integer holding a time value,
+ * in seconds. String format is "hour:min:sec".
+ */
+static char *
+pretty_time (int secs)
+{
+        static char str[12];
+        int         hour, min, sec;
+
+        min  = secs / 60;
+        sec  = secs % 60;
+        hour = min / 60;
+        min  = min % 60;
+
+        if (hour > 0)
+                snprintf (str, 9, "%2d:%02d:%02d", hour, min, sec);
+        else
+                snprintf (str, 9, "%2d:%02d     ", min, sec);
+
+        return str;
+}
+
+
+/*
+ * pretty_speed
+ *
+ * Scale and convert a given transfer rate to a beautified string. Metrics are
+ * changed when value is scaled.
+ */
+static char *
+pretty_speed (float rate)
+{
+        static char str[16];
+        char       *metric;
+        
+        if (rate > 1024.0 * 1024.0 * 1024.0) {
+                rate  /= 1024.0 * 1024.0 * 1024.0;
+                metric = "G/s";
+        } else if (rate > 1024.0 * 1024.0) {
+                rate  /= 1024.0 * 1024.0;
+                metric = "M/s";
+        } else if (rate > 1024.0) {
+                rate  /= 1024.0;
+                metric = "K/s";
+        } else {
+                metric = "B/s";
+        }
+
+        snprintf (str, 16, "%4.1f %s", rate, metric);
+        return str;
+}
+
+
+/*
  * draw_bar
  *
  * Calculate and displays the GNU Wget style progress bar. Then, this is mostly
  * stolen from GNU Wget too.
  *
- * This is the format (one space margin at the end of the line):
+ * This is the format: 
  *
  * 999% [===...] 9,999,999,999 9999.9 X/s  ETA 99:99:99
  *
- * Discount characters: 4 + 2 + 13 + 6 + 3 + 3 + 8 = 39
- * Discount spaces    : 1 + 1 +  1 + 1 + 2 + 1 + 1 =  8
- * Total: 47 (As defined by BAR_DATA_WIDTH)
+ * Where each part needs:
+ *
+ *      999%          -->  4 chars + 1 space
+ *      [===...]      -->  2 chars (and the remaining) + 1 space
+ *      9,999,999,999 --> 13 chars + 1 space
+ *      9999.9 X/s    -->  9 chars + 3 spaces
+ *      ETA 99:99:99  --> 11 chars + 2 spaces
+ *
+ *      TOTAL         --> 39 chars + 8 spaces = 47 
+ *      (As defined by BAR_DATA_WIDTH)
  */
 static void
-draw_bar (progress_t *pr)
+draw_bar (void)
 {
-        int   bar_size = pr->term_width - BAR_DATA_WIDTH;
-        int   remaining, i, j, mag;
-        float percent, fill, speed, total_time = 1, mdelta = 0.000001;
-        int   eta, eta_hour, eta_min, eta_sec;
-        char  sent_str[16], sent_str_b[16], speed_str[8], eta_str[12];
+        int   eta, bar_size = terminal_width - BAR_DATA_WIDTH;
+        float percent, fill, speed, av_delta;
         char  bar[bar_size];
-        struct timeval curtime;
 
-        /* Before any calculation, we have to gather the last_delta value and
-         * index it in the delta[] array. This way, later before showing the
-         * rate, we calculate a mean delta and so divide the last_transfer by
-         * the average time spent in the last 32 transfers */
-        if (delta_i >= 32)
-                delta_i = 0;
-        delta[delta_i] = pr->last_delta;
-        delta_i++;
-         
-        /* Calculate the percentage and the bar fill amount. Some temporary
-         * calculations have to done in float representation because of overflow
-         * issues */
-        percent = ((float) pr->completed_bytes / (float) pr->total_bytes)*100.0;
+        /* Some temporary calculations have to done in float representation
+         * because of overflow issues */
+        percent = ((float) completed_size / (float) total_size) * 100.0;
         fill    = ((float) bar_size * percent) / 100.0;
 
-        /* Paint the bar */
         memset (bar, ' ', bar_size);
         memset (bar, '=', (size_t) fill);
         bar[bar_size] = '\0';
 
-        /* Beautify the amount of transferred bytes with thousand separators */
-        i = snprintf (sent_str, 16, "%lu", pr->completed_bytes);
-        j = i + (i - 1) / 3;
-        sent_str_b[j] = '\0';
-        do {
-                sent_str_b[--j] = sent_str[--i]; if (i == 0) break;
-                sent_str_b[--j] = sent_str[--i]; if (i == 0) break;
-                sent_str_b[--j] = sent_str[--i]; if (i == 0) break;
-                sent_str_b[--j] = ',';
-        } while (1);
+        av_delta = (delta[0]   + delta[1]  + delta[2]  + delta[3]  + delta[4]
+                   + delta[5]  + delta[6]  + delta[7]  + delta[8]  + delta[9]
+                   + delta[10] + delta[11] + delta[12] + delta[13] + delta[14]
+                   + delta[15]) / 16.0;
 
-        /* Calculate transfer speed and estimated time */
-        mdelta = (delta[0]   + delta[1]  + delta[2]  + delta[3]  + delta[4] 
-                 + delta[5]  + delta[6]  + delta[7]  + delta[8]  + delta[9]
-                 + delta[10] + delta[11] + delta[12] + delta[13] + delta[14]
-                 + delta[15] + delta[16] + delta[17] + delta[18] + delta[19]
-                 + delta[20] + delta[21] + delta[22] + delta[23] + delta[24]
-                 + delta[25] + delta[26] + delta[27] + delta[28] + delta[29]
-                 + delta[30] + delta[31]) / 32;
-        if (mdelta <= 0.0)
-                mdelta = 0.000001;
+        speed = (float) CANUTE_BLOCK_SIZE / av_delta;
+        eta   = (int) ((float) (total_size - completed_size) / speed);
 
-        /* If we are about to finish, we need to calculate the mean speed by
-         * dividing the total bytes by the total time spent (always thought for
-         * a single transfer). */
-        remaining = pr->total_bytes - pr->completed_bytes;
-        if (remaining <= CANUTE_BLOCK_SIZE) {
-                gettimeofday (&curtime, NULL);
-                total_time = (curtime.tv_sec - pr->init_time.tv_sec) * 1.0e+6
-                             + (curtime.tv_usec - pr->init_time.tv_usec);
-                speed = (float) (pr->total_bytes / (total_time * 1.0e-6));
-        } else {
-                speed = (float) pr->last_transfer / mdelta;
-        }
-        eta = (int) (remaining / speed);
-
-        /* Adjust speed magnitude */
-        if (speed > 1024.0 * 1024.0 * 1024.0) {
-                speed /= 1024.0 * 1024.0 * 1024.0;
-                mag    = 3;
-        } else if (speed > 1024.0 * 1024.0) {
-                speed /= 1024.0 * 1024.0;
-                mag    = 2;
-        } else if (speed > 1024.0) {
-                speed /= 1024.0;
-                mag    = 1;
-        } else {
-                mag = 0;
-        }
-        sprintf (speed_str, "%4.1f", speed);
-
-        /* Beautify estimated time value */
-        eta_min  = eta / 60;
-        eta_sec  = eta % 60;
-        eta_hour = eta_min / 60;
-        eta_min  = eta_min % 60;
-        sprintf (eta_str, "%02d:%02d:%02d", eta_hour, eta_min, eta_sec);
-
-        /* Then print */
-#ifdef HASEFROCH
-        if (remaining <= CANUTE_BLOCK_SIZE)
-                printf ("\r%3d%% [%s] %-13s AvRate: %5s %s  done. \n",
-                        (int) percent, bar, sent_str_b, speed_str, metric[mag]);
-        else
-                printf ("\r%3d%% [%s] %-13s %6s %s  ETA %s", (int) percent, bar,
-                        sent_str_b, speed_str, metric[mag], eta_str);
-#else
-        if (remaining <= CANUTE_BLOCK_SIZE)
-                printf ("\033[1A%3d%% [%s] %-13s AvRate: %5s %s done. \n",
-                        (int) percent, bar, sent_str_b, speed_str, metric[mag]);
-        else
-                printf ("\033[1A%3d%% [%s] %-13s %6s %s  ETA %s\n", (int) percent,
-                        bar, sent_str_b, speed_str, metric[mag], eta_str);
-#endif
+        /* Print all */
+        printf ("\r%3d%% [%s] %-13s %10s  ETA %s", (int) percent, bar,
+                pretty_number (completed_size), pretty_speed (speed),
+                pretty_time (eta));
+        fflush (stdout);
 }
 
 
@@ -811,57 +848,76 @@ draw_bar (progress_t *pr)
  * Prepare progress output for a single file.
  */
 void
-setup_progress (progress_t *pr, char *filename, unsigned long size)
+setup_progress (char *filename, unsigned long size)
 {
-        /* We watch the clock before and after the whole transfer to estimate an
-         * average speed to be shown at the end. */
-        gettimeofday (&pr->init_time, NULL);
+        int i;
 
         /* Initialize the delta array before every single transfer */
-        memset (delta, 0, sizeof (float) * 32);
-        delta_i = 0;
+        for (i = 0; i < 16; i += 4) {
+                delta[i]     = 1.0; 
+                delta[i + 1] = 1.0;
+                delta[i + 2] = 1.0;
+                delta[i + 3] = 1.0;
+        }
 
-        pr->term_width      = query_terminal_width ();
-        pr->total_bytes     = size;
-        pr->completed_bytes = 0;
-        pr->last_transfer   = 0;
-        pr->last_delta      = 0.0;
+        delta_index    = 0;
+        terminal_width = query_terminal_width ();
+        total_size     = size;
+        completed_size = 0;
 
-        gettimeofday (&pr->last_timestamp, NULL);
+        printf ("Transferring '%s' (%s bytes):\n", filename,
+                pretty_number (size));
 
-#ifdef HASEFROCH
-        printf ("\r\nTransferring '%s':\r\n", filename);
-#else
-        printf ("Transferring '%s':\n\n", filename);
-#endif
+        /* We watch the clock before and after the whole transfer to estimate an
+         * average speed to be shown at the end. */
+        gettimeofday (&init_time, NULL);
+        last_time = init_time;
 }
 
 
 /*
  * show_progress
  *
- * Show amount of transfer and percentage.
+ * Update the history ring and show amount of transfer and percentage.
  */
 void
-show_progress (progress_t *pr, unsigned long sent)
+show_progress (unsigned long increment)
 {
-        float micros;
-        struct timeval timestamp;
+        struct timeval now;
 
-        gettimeofday (&timestamp, NULL);
+        gettimeofday (&now, NULL);
 
-        micros = (int) timestamp.tv_usec - (int) pr->last_timestamp.tv_usec;
-        if (micros < 0) {
-                micros += 1000000;
-                pr->last_timestamp.tv_sec++;
-        }
+        delta[delta_index] = elapsed_time (&last_time, &now);
 
-        pr->last_transfer   = sent - pr->completed_bytes;
-        pr->completed_bytes = sent;
-        pr->last_timestamp  = timestamp;
-        pr->last_delta      = ((float) (timestamp.tv_sec
-                              - pr->last_timestamp.tv_sec) + micros) * 1.0e-6;
+        delta_index++;
+        if (delta_index >= 16)
+                delta_index = 0;
 
-        draw_bar (pr);
+        completed_size += increment;
+        last_time       = now;
+
+        draw_bar ();
+}
+
+
+/*
+ * finish_progress
+ *
+ * Show the average transfer rate and other general information.
+ */
+void
+finish_progress (void)
+{
+        struct timeval now;
+        float          total_elapsed, av_rate;
+
+        gettimeofday (&now, NULL);
+
+        total_elapsed = elapsed_time (&init_time, &now);
+        av_rate       = (float) total_size / total_elapsed;
+
+        printf ("\nCompleted %s bytes in %s (Average Rate: %s)\n\n",
+                pretty_number (total_size), pretty_time (total_elapsed),
+                pretty_speed (av_rate));
 }
 

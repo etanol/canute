@@ -21,6 +21,9 @@ $(HOME)/bin/canute: canute
 canute: canute.o
 	$(CC) $(LDFLAGS) -o $@ $^
 
+canute.dbg: canute.c
+	$(CC) -O0 -g -pg -o $@ $^
+
 canute.exe: canute.obj
 	$(CCROSS) -L/usr/i586-mingw32msvc/lib $(LDFLAGS) -o $@ $^ -lwsock32
 
