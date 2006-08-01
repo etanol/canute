@@ -4,14 +4,13 @@
 # Use 'make' para compilar tanto la versión POSIX como win32
 #
 
-CC     ?= /usr/bin/gcc
-CCROSS ?= /usr/bin/i586-mingw32msvc-gcc
+CC      ?= /usr/bin/gcc
+CCROSS  ?= /usr/bin/i586-mingw32msvc-gcc
 CFLAGS  := -O2 -Wall -pipe -fomit-frame-pointer
 LDFLAGS := -Wl,-s,-O1
 ARCH    := -march=pentium-m -msse -mfpmath=sse
 
 all: canute canute.exe
-cl : ChangeLog
 
 install: $(HOME)/bin/canute
 
@@ -31,12 +30,9 @@ canute.exe: canute.obj
 	$(CC) $(CFLAGS) $(ARCH) -c $^
 
 %.obj: %.c
-	$(CCROSS) $(CFLAGS) -c -o $@ $^ 
+	$(CCROSS) $(CFLAGS) -DHASEFROCH -c -o $@ $^ 
 
 .PHONY: clean ChangeLog
 clean:
 	@-rm -fv *.o *.obj canute canute.exe
-
-ChangeLog:
-	hg log --style changelog >$@
 

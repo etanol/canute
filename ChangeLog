@@ -1,3 +1,12 @@
+2006-07-16  etanol  <diptongo@gmail.com>
+
+	* Canute v0.6
+
+	- Modifications on time strings to make them more compact.
+	- Fixed the progress bar line-jumping issue on win32.
+	- Eliminated the compiler warning in function gettimeofday()
+	on win32.
+
 2006-07-02  etanol  <diptongo@gmail.com>
 
 	* Canute v0.5
