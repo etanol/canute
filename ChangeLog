@@ -1,3 +1,14 @@
+2006-08-06  etanol  <diptongo@gmail.com>
+
+	* Canute v1.0
+
+	- Major version update, not backwards compatible due to
+	changes in protocol.
+	- Automatic resume support.
+	- Large file support (> 4GBytes).
+	- Source file splitted to improve code management and
+	readability.
+
 2006-07-16  etanol  <diptongo@gmail.com>
 
 	* Canute v0.6
