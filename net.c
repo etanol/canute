@@ -28,7 +28,7 @@ open_connection_server (uint16_t port)
 
         bsk = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
         if (bsk == INVALID_SOCKET) 
-                fatal("Creating socket");
+                fatal("Could not create socket");
 
         saddr.sin_family      = AF_INET;
         saddr.sin_port        = htons(port);
@@ -40,19 +40,19 @@ open_connection_server (uint16_t port)
 
         e = bind(bsk, (SOCKADDR *) &saddr, sizeof(saddr));
         if (e == SOCKET_ERROR)
-                fatal("Opening port %d", port);
+                fatal("Could not open port %d", port);
 
         e = listen(bsk, 1);
         if (e == SOCKET_ERROR)
-                fatal("Listening port %d", port);
+                fatal("Could not listen on port %d", port);
 
         e  = sizeof(saddr);
         sk = accept(bsk, (SOCKADDR *) &saddr, (socklen_t *) &e);
         if (sk == INVALID_SOCKET)
-                fatal("Accepting client connection");
+                fatal("Could not accept client connection");
 
         /* Binding socket not needed anymore */
-        close_connection(bsk);
+        closesocket(bsk);
         return sk;
 }
 
@@ -103,23 +103,6 @@ open_connection_client (char *host, uint16_t port)
 
 
 /*
- * close_connection
- *
- * Trivial implementation to have consistency in socket manipulation. Close the
- * given connection.
- */
-void
-close_connection (SOCKET sk)
-{
-#ifdef HASEFROCH
-        closesocket(sk);
-#else
-        close(sk);
-#endif
-}
-
-
-/*
  * send_data
  *
  * Send count bytes over the connection. Doesn't finish until all of them are
@@ -158,5 +141,66 @@ receive_data (SOCKET sk, char *buf, size_t count)
                 count -= r;
                 buf   += r;
         }
+}
+
+
+/*
+ * send_message
+ *
+ * Build a header packet and send it through the connection. All the fields are
+ * converted to network byte order if required.
+ */
+void
+send_message (SOCKET sk, int type, int64_t size, char *name)
+{
+        int           blocks, extra;
+        struct header packet;
+
+        blocks = (int) (size >> CANUTE_BLOCK_BITS);
+        extra  = (int) (size & CANUTE_BLOCK_MASK);
+
+        packet.type   = htonl(type);
+        packet.blocks = htonl(blocks);
+        packet.extra  = htonl(extra);
+
+        if (name != NULL) {
+                strncpy(packet.name, name, CANUTE_NAME_LENGTH);
+                packet.name[CANUTE_NAME_LENGTH] = '\0';
+        } else {
+                packet.name[0] = '\0';
+        }
+
+        send_data(sk, (char *) &packet, sizeof(struct header));
+}
+
+
+/*
+ * receive_message
+ *
+ * Read from the connection expecting a header packet. Fix byte ordering if
+ * necessary, fill the fields (if address was provided by the caller) and return
+ * the message type.
+ */
+int
+receive_message (SOCKET sk, int64_t *size, char *name)
+{
+        int           type, blocks, extra;
+        struct header packet;
+
+        receive_data(sk, (char *) &packet, sizeof(struct header));
+
+        if (size != NULL) {
+                blocks = ntohl(packet.blocks),
+                extra  = ntohl(packet.extra),
+                *size  = ((int64_t) blocks << 16) + extra;
+        }
+
+        if (name != NULL) {
+                strncpy(name, packet.name, CANUTE_NAME_LENGTH);
+                name[CANUTE_NAME_LENGTH] = '\0';
+        }
+
+        type = ntohl(packet.type);
+        return type;
 }
 

@@ -24,7 +24,7 @@ static int64_t        completed_size;
 static int64_t        initial_offset;
 static struct timeval init_time;
 static struct timeval last_time;
-static double         delta[16];
+static float          delta[16];
 static int            delta_index;
 
 
@@ -87,8 +87,8 @@ gettimeofday (struct timeval *time, void *dummy)
 /*
  * elapsed_time
  *
- * Calculate the elapsed time from old_time to new_time in seconds as a float to
- * maintain microsecond accuracy. In case elapsed time is less than a
+ * Calculate the elapsed time from old_time to new_time in seconds as a floating
+ * point to maintain microsecond accuracy. In case elapsed time is less than a
  * microsecond, then round it to that value so something greater than zero is
  * returned.
  */
@@ -127,7 +127,11 @@ pretty_number (int64_t num)
         char        ugly[12];
         int         i, j;
 
+#ifdef HASEFROCH
+        i = snprintf(ugly, 12, "%I64d", num);
+#else
         i = snprintf(ugly, 12, "%lld", num);
+#endif
         j = i + (i - 1) / 3;
         str[j] = '\0';
         do {
@@ -176,7 +180,7 @@ pretty_time (int secs)
  * changed when value is scaled.
  */
 static char *
-pretty_speed (double rate)
+pretty_speed (float rate)
 {
         static char str[16];
         char       *metric;
@@ -223,21 +227,21 @@ pretty_speed (double rate)
 static void
 draw_bar (void)
 {
-        int    eta, bar_size = terminal_width - BAR_DATA_WIDTH;
-        double percent, fill, speed, av_delta;
-        double ofill; /* For initial offset */
-        char   bar[bar_size];
+        int   eta, bar_size = terminal_width - BAR_DATA_WIDTH;
+        float percent, fill, speed, av_delta;
+        float ofill; /* For initial offset */
+        char  bar[bar_size];
 
-        /* Some temporary calculations have to done in float representation
-         * because of overflow issues */
-        percent = ((double) completed_size / (double) total_size) * 100.0;
-        fill    = ((double) bar_size * percent) / 100.0;
+        /* Some temporary calculations have to done in floating point
+         * representation because of overflow issues */
+        percent = ((float) completed_size / (float) total_size) * 100.0;
+        fill    = ((float) bar_size * percent) / 100.0;
 
         memset(bar, ' ', bar_size);
         memset(bar, '=', (size_t) fill);
         if (initial_offset > 0) {
-                ofill = ((double) initial_offset / (double) total_size)
-                        * (double) bar_size;
+                ofill = ((float) initial_offset / (float) total_size)
+                        * (float) bar_size;
                 memset(bar, '+', (size_t) ofill);
         }
         bar[bar_size] = '\0';
@@ -248,8 +252,8 @@ draw_bar (void)
                    + delta[10] + delta[11] + delta[12] + delta[13] + delta[14]
                    + delta[15]) / 16.0;
 
-        speed = (double) CANUTE_BLOCK_SIZE / av_delta;
-        eta   = (int) ((double) (total_size - completed_size) / speed);
+        speed = (float) CANUTE_BLOCK_SIZE / av_delta;
+        eta   = (int) ((float) (total_size - completed_size) / speed);
 
         /* Print all */
         printf("\r%3d%% [%s] %-14s %10s ETA %-8s", (int) percent, bar,
@@ -267,7 +271,7 @@ draw_bar (void)
  * Prepare progress output for a single file.
  */
 void
-setup_progress (char *filename, int64_t size, int64_t offset)
+setup_progress (char *name, int64_t size, int64_t offset)
 {
         int i;
 
@@ -285,7 +289,7 @@ setup_progress (char *filename, int64_t size, int64_t offset)
         initial_offset = offset;
         completed_size = offset;
 
-        printf("Transferring '%s' (%s bytes):\n", filename,
+        printf("*** Transferring '%s' (%s bytes):\n", name,
                pretty_number(size));
 
         /* We watch the clock before and after the whole transfer to estimate an
@@ -333,11 +337,10 @@ finish_progress (void)
         gettimeofday(&now, NULL);
 
         total_elapsed = elapsed_time(&init_time, &now);
-        av_rate       = (float) total_size / total_elapsed;
+        av_rate       = (float) (total_size - initial_offset) / total_elapsed;
 
         printf("\nCompleted %s bytes in %s (Average Rate: %s)\n\n",
-               pretty_number(total_size), pretty_time(total_elapsed),
-               pretty_speed(av_rate));
+               pretty_number(total_size - initial_offset),
+               pretty_time(total_elapsed), pretty_speed(av_rate));
 }
-
 

@@ -29,7 +29,7 @@ main (int argc, char **argv)
         SOCKET   sk = -1; /* Quest for a warning free compilation */ 
         char    *port_str;
         uint16_t port;
-        int      i, arg = 0;
+        int      i, last, arg = 0;
 #ifdef HASEFROCH 
         WSADATA  ws;
 
@@ -78,11 +78,10 @@ main (int argc, char **argv)
                 /* Now we have the transmission channel open, so let's send
                  * everything we're supposed to send */
                 for (i = arg; i < argc; i++)
-                        if (!try_send_dir(sk, argv[i]))
-                                send_file(sk, argv[i]);
+                        send_item(sk, argv[i]);
 
                 /* It's over. Notify the receiver to finish as well, please */
-                end_session(sk);
+                send_message(sk, REQUEST_END, 0, NULL);
 
         } else if (strncmp(argv[1], "get", 3) == 0) {
 
@@ -105,73 +104,15 @@ main (int argc, char **argv)
                 i = CANUTE_BLOCK_SIZE;
                 setsockopt(sk, SOL_SOCKET, SO_RCVBUF, CCP_CAST &i, sizeof(i));
 
-                while (receive_item(sk))
-                        /* Just receive until end notification */;
+                do {
+                        last = receive_item(sk);
+                } while (!last);
 
         } else {
                 help(argv[0]);
         }
 
-        close_connection(sk);
+        closesocket(sk);
         return EXIT_SUCCESS;
-}
-
-
-/**********************  MISCELLANEOUS HELPER FUNCTIONS  **********************/
-
-/*
- * help
- *
- * Show command syntax and exit not successfully.
- */
-void
-help (char *argv0)
-{
-        printf("Canute " CANUTE_VERSION_STR "\n\n"
-               "Syntax:\n"
-               "\t%s send[:port]   <file/directory> [<file/directory> ...]\n"
-               "\t%s get[:port]    <host/IP>\n"
-               "\t%s sendto[:port] <host/IP> <file/directory> [<file/directory> ...]\n"
-               "\t%s getserv[:port]\n", argv0, argv0, argv0, argv0);
-        exit(EXIT_FAILURE);
-}
-
-
-/*
- * error
- *
- * Error message a la printf(). Custom message + system error string.
- */
-void
-error (char *msg, ...)
-{
-        va_list pars;
-        char    s[128];
-
-        fputs("ERROR: ", stderr);
-        va_start(pars, msg);
-        vsnprintf(s, 128, msg, pars);
-        va_end(pars);
-        perror(s);
-}
-
-
-/*
- * fatal
- * 
- * Fatal error. Same as error() but also exit failing (aborting).
- */
-void
-fatal (char *msg, ...)
-{
-        va_list pars;
-        char    s[128];
-
-        fputs("FATAL ERROR: ", stderr);
-        va_start(pars, msg);
-        vsnprintf(s, 128, msg, pars);
-        va_end(pars);
-        perror(s);
-        exit(EXIT_FAILURE);
 }
 
