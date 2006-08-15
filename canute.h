@@ -31,7 +31,6 @@
 /* Common headers */
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -48,11 +47,9 @@
 #define  CCP_CAST (const char *)
 #define  IS_PATH_SEPARATOR(x) ((x) == '\\' || (x) == '/')
 #define  stat __stat64
+#define  stat(path, buf) _stat64((path), (buf))
 typedef int socklen_t;
 extern int _stat64 (const char *path, struct __stat64 *buffer);
-
-static inline int stat (const char *f, struct stat *s) { return _stat64(f, s); }
-static inline int do_mkdir (const char *f)             { return mkdir(f); }
 
 #else
 
@@ -70,10 +67,10 @@ static inline int do_mkdir (const char *f)             { return mkdir(f); }
 #define  SOCKADDR struct sockaddr
 #define  CCP_CAST  /* Cast to (const char *) not needed in UNIX */
 #define  IS_PATH_SEPARATOR(x) ((x) == '/')
+#define  closesocket(sk) close(sk)
+#define  mkdir(path) mkdir(path, 0755)
 typedef int SOCKET;
 
-static inline int closesocket (SOCKET s)      { return close(s); }
-static inline int do_mkdir    (const char *f) { return mkdir(f, 0755); }
 #endif  /* WIN32 */
 
 /* Helper macro: True if str is NOT "." or ".." */

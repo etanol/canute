@@ -9,8 +9,8 @@
 #                                                                              #
 ################################################################################
 
-CC      ?= /usr/bin/gcc
-CCROSS  ?= /usr/bin/i586-mingw32msvc-gcc
+CC      ?= gcc
+HCC     ?= i586-mingw32msvc-gcc
 CFLAGS  := -O2 -Wall -pipe -fomit-frame-pointer
 LDFLAGS := -Wl,-s,-O1
 
@@ -33,7 +33,7 @@ canute: $(Objects)
 
 canute.exe: $(HaseObjects)
 	@echo ' Linking   [win32] $@' && \
-	$(CCROSS) -L/usr/i586-mingw32msvc/lib $(LDFLAGS) -o $@ $^ -lwsock32
+	$(HCC) -L/usr/i586-mingw32msvc/lib $(LDFLAGS) -o $@ $^ -lwsock32
 
 canute.dbg: $(Sources) $(Header)
 	@echo ' Building  [debug] $@' && \
@@ -48,7 +48,7 @@ else
 endif
 
 %.obj: %.c $(Header)
-	@echo ' Compiling [win32] $@' && $(CCROSS) $(CFLAGS) -c -o $@ $< 
+	@echo ' Compiling [win32] $@' && $(HCC) $(CFLAGS) -c -o $@ $< 
 
 %.s: %.c $(Header)
 	@echo ' Assembling        $@' && $(CC) $(CFLAGS) $(ARCH) -S $<

@@ -9,6 +9,61 @@
 /*                                                                            */
 /******************************************************************************/
 
+/*
+ * EXPLANATION
+ *
+ * The protocol used (if could be labeled as "protocol") is very simple. There
+ * is a header packet (struct header) which contains the packet or message type,
+ * the size in a custom representation and the name of the item. A header is
+ * always sent to make the receiver host know the size of the contents when
+ * required. Even though the same data structure is used for all messages, the
+ * sender's messages are requests and the receiver's are replies.
+ *
+ * There are four types of requests (sender) and two types of replies
+ * (receiver); the requests identify the kind of item that has to be negotiated.
+ * In some cases the receiver must answer the sender requests. Those messages
+ * are identified by a self-explanatory constant.
+ *
+ * When a file is about to be transferred, the sender uses a REQUEST_FILE. The
+ * receiver must reply this message with a REPLY_ACCEPT if it wants the file,
+ * indicating in the same message the initial offset of the file (resume
+ * support). In case the receiver doesn't want or need the file, it must answer
+ * with a REPLY_SKIP.
+ *
+ * If the sender needs to send a directory, a REQUEST_BEGINDIR with the name of
+ * the directory has to be sent. The receiver must accept or skip the directory
+ * (directory skipping normally happens on error situations). When a directory
+ * has been accepted is walked through recursively sending each directory entry
+ * with the corresponding header. In order to make directory recursion easier,
+ * after a directory has been accepted, both peers should move into it.
+ *
+ * After the directory has been completely read, a REQUEST_ENDDIR must be sent
+ * and both peers should return to the parent directory. This "end of directory"
+ * request must NOT be answered and any error occured when moving to parent
+ * directory is considered fatal.
+ *
+ * Finally, when no more items are left, a REQUEST_END is sent to notify the
+ * receiver about the situation. Then both hosts close the connection and
+ * exit.
+ *
+ *
+ * ABOUT FILE SIZES
+ *
+ * When large file support (LFS) came into scene, some issues arised. The most
+ * important was the handling of 64 bit numbers in 32 bit machines. Internal
+ * details about representation and handling (parameter passing, etc) were not
+ * clear and could obviously vary from platform to platform.
+ *
+ * Initial tests failed because middle endianness in 64 bit numbers was
+ * discarded. And there isn't too much documentation about it. Having a beach
+ * bath with MKD (see README), he gave me the idea of using a multiplier as the
+ * transfer was block based. With this approach, up to 47 bits (without sign)
+ * can be used to represent a size, which can represent 128 TeraBytes of
+ * storage.
+ *
+ * This way we can transfer large sizes without worrying about local byte order
+ * (ntohl and htonl are transparent) and 64 bit number representation.
+ */
 #include "canute.h"
 
 static char databuf[CANUTE_BLOCK_SIZE];
@@ -212,7 +267,7 @@ receive_item (SOCKET sk)
                 break;
 
         case REQUEST_BEGINDIR:
-                do_mkdir(namebuf);
+                mkdir(namebuf);
                 e = chdir(namebuf);
                 if (e == -1) {
                         error("Cannot change to dir '%s'", namebuf);

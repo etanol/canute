@@ -130,7 +130,7 @@ pretty_number (int64_t num)
 #ifdef HASEFROCH
         i = snprintf(ugly, 12, "%I64d", num);
 #else
-        i = snprintf(ugly, 12, "%lld", num);
+        i = snprintf(ugly, 12, "%lld", (long long) num);
 #endif
         j = i + (i - 1) / 3;
         str[j] = '\0';

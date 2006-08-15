@@ -160,7 +160,7 @@ send_message (SOCKET sk, int type, int64_t size, char *name)
         extra  = (int) (size & CANUTE_BLOCK_MASK);
 
         packet.type   = htonl(type);
-        packet.blocks = htonl(blocks);
+        packet.blocks = htonl(blocks); /* Read protocol.c for an explanation */
         packet.extra  = htonl(extra);
 
         if (name != NULL) {
@@ -190,8 +190,9 @@ receive_message (SOCKET sk, int64_t *size, char *name)
         receive_data(sk, (char *) &packet, sizeof(struct header));
 
         if (size != NULL) {
-                blocks = ntohl(packet.blocks),
-                extra  = ntohl(packet.extra),
+                /* Read protocol.c for an explanation */
+                blocks = ntohl(packet.blocks); 
+                extra  = ntohl(packet.extra);
                 *size  = ((int64_t) blocks << 16) + extra;
         }
 
