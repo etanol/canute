@@ -86,7 +86,7 @@ receive_file (SOCKET sk, char *name, int64_t size)
         FILE       *file;
         int64_t     received_bytes; /* Think about it also as "offset" */
         size_t      b;
-        struct stat st;
+        stat_info_t st;
 
         e = stat(name, &st);
         if (e == -1) {
@@ -191,8 +191,8 @@ send_item (SOCKET sk, char *name)
         int            e, reply;
         char          *bname;
         DIR           *dir;
-        struct stat    st;
         struct dirent *dentry;
+        stat_info_t    st;
 
         e = stat(name, &st);
         if (e == -1) {
