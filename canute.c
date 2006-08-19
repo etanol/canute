@@ -26,10 +26,10 @@
 int
 main (int argc, char **argv)
 {
-        SOCKET   sk = -1; /* Quest for a warning free compilation */ 
-        char    *port_str;
-        uint16_t port;
-        int      i, last, arg = 0;
+        SOCKET         sk = -1; /* Quest for a warning free compilation */ 
+        char          *port_str;
+        unsigned short port;
+        int            i, last, arg = 0;
 #ifdef HASEFROCH 
         WSADATA  ws;
 
@@ -47,7 +47,7 @@ main (int argc, char **argv)
         if (port_str != NULL) {
                 *port_str = '\0';
                 port_str++;
-                port = atoi(port_str);
+                port = (unsigned short) atoi(port_str);
         }
 
         if (strncmp(argv[1], "send", 4) == 0) {

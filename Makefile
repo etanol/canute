@@ -9,10 +9,11 @@
 #                                                                              #
 ################################################################################
 
-CC      ?= gcc
-HCC     ?= i586-mingw32msvc-gcc
-CFLAGS  := -O2 -Wall -pipe -fomit-frame-pointer
-LDFLAGS := -Wl,-s,-O1
+CC       ?= gcc
+HCC      := i586-mingw32msvc-gcc
+CFLAGS   ?= -O2 -Wall -fomit-frame-pointer -DFLEXBAR_SUPPORT
+LDFLAGS  ?= -Wl,-s,-O1
+DBGFLAGS ?= -Wall -O0 -g -pg -DDEBUG -DFLEXBAR_SUPPORT
 
 Header      := canute.h
 Sources     := canute.c feedback.c net.c protocol.c util.c
@@ -37,7 +38,7 @@ canute.exe: $(HaseObjects)
 
 canute.dbg: $(Sources) $(Header)
 	@echo ' Building  [debug] $@' && \
-	$(CC) -Wall -pipe -O0 -g -pg -DDEBUG -o $@ $(filter %.c, $^)
+	$(CC) $(DBGFLAGS) -o $@ $(filter %.c, $^)
 
 # Pattern rules
 %.o: %.c $(Header)
@@ -55,7 +56,8 @@ endif
 
 # Cleaning and help
 clean:
-	@-rm -fv $(Objects) $(HaseObjects) canute canute.exe canute.dbg
+	@-echo ' Cleaning objects and binaries' && \
+	rm -f $(Objects) $(HaseObjects) canute canute.exe canute.dbg
 
 help:
 	@echo 'User targets:'

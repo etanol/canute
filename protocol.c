@@ -80,11 +80,11 @@ static char databuf[CANUTE_BLOCK_SIZE];
  * TODO: Skip policy could be refined.
  */
 static void
-receive_file (SOCKET sk, char *name, int64_t size)
+receive_file (SOCKET sk, char *name, long long size)
 {
         int         e;
         FILE       *file;
-        int64_t     received_bytes; /* Think about it also as "offset" */
+        long long   received_bytes; /* Think about it also as "offset" */
         size_t      b;
         stat_info_t st;
 
@@ -97,7 +97,7 @@ receive_file (SOCKET sk, char *name, int64_t size)
                 send_message(sk, REPLY_SKIP, 0, NULL);
                 return;
         } else {
-                received_bytes = (int64_t) st.st_size;
+                received_bytes = (long long) st.st_size;
         }
 
         file = fopen(name, "ab");
@@ -134,13 +134,13 @@ receive_file (SOCKET sk, char *name, int64_t size)
  * Treat the item as a file and try to send it.
  */
 static void
-send_file (SOCKET sk, char *name, int64_t size)
+send_file (SOCKET sk, char *name, long long size)
 {
-        int     e, reply;
-        int64_t sent_bytes; /* Size reported remotely */
-        size_t  b;
-        char   *bname;
-        FILE   *file;
+        int       e, reply;
+        long long sent_bytes; /* Size reported remotely */
+        size_t    b;
+        char     *bname;
+        FILE     *file;
 
         bname = basename(name);
         file  = fopen(name, "rb");
@@ -257,7 +257,7 @@ receive_item (SOCKET sk)
 {
         static char namebuf[CANUTE_NAME_LENGTH];
         int         e, request;
-        int64_t     size;
+        long long   size;
 
         request = receive_message(sk, &size, namebuf);
 

@@ -1,4 +1,4 @@
-2006-08-14  etanol  <diptongo@gmail.com>
+2006-08-19  etanol  <diptongo@gmail.com>
 
 	* Canute v1.0
 
@@ -8,8 +8,12 @@
 	- Large file support (> 2GBytes).
 	- Some fatal errors now treated as non-fatal to gain
 	robustness.
+	- More UNIX flavours supported. Commercial ones tested are:
+	Solaris, OSF1 (5.1) and HP-UX.
 	- Source file splitted to improve code management and
 	readability.
+	- An informative README file added to the distribution.
+	- Code licensed under GPLv2.
 
 2006-07-16  etanol  <diptongo@gmail.com>
 

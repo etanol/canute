@@ -20,11 +20,12 @@
  * transmission.
  */
 SOCKET
-open_connection_server (uint16_t port)
+open_connection_server (unsigned short port)
 {
         SOCKET             bsk, sk; /* bsk --> Binding SocKet */
         struct sockaddr_in saddr;
         int                e;
+        socklen_t          alen;
 
         bsk = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
         if (bsk == INVALID_SOCKET) 
@@ -46,8 +47,8 @@ open_connection_server (uint16_t port)
         if (e == SOCKET_ERROR)
                 fatal("Could not listen on port %d", port);
 
-        e  = sizeof(saddr);
-        sk = accept(bsk, (SOCKADDR *) &saddr, (socklen_t *) &e);
+        alen = (socklen_t) sizeof(saddr);
+        sk   = accept(bsk, (SOCKADDR *) &saddr, &alen);
         if (sk == INVALID_SOCKET)
                 fatal("Could not accept client connection");
 
@@ -65,7 +66,7 @@ open_connection_server (uint16_t port)
  * for transmission.
  */
 SOCKET
-open_connection_client (char *host, uint16_t port)
+open_connection_client (char *host, unsigned short port)
 {
         SOCKET             sk;
         struct sockaddr_in saddr;
@@ -83,7 +84,7 @@ open_connection_client (char *host, uint16_t port)
                 /* Invalid IP, maybe we have to do a DNS query */
                 he = gethostbyname(host);
                 if (he == NULL) {
-#ifdef HASEFROCH
+#if defined(HASEFROCH) || defined(OMIT_HERROR)
                         fatal("Invalid IP or hostname");
 #else
                         herror("FATAL ERROR: Invalid IP or hostname");
@@ -151,7 +152,7 @@ receive_data (SOCKET sk, char *buf, size_t count)
  * converted to network byte order if required.
  */
 void
-send_message (SOCKET sk, int type, int64_t size, char *name)
+send_message (SOCKET sk, int type, long long size, char *name)
 {
         int           blocks, extra;
         struct header packet;
@@ -182,7 +183,7 @@ send_message (SOCKET sk, int type, int64_t size, char *name)
  * the message type.
  */
 int
-receive_message (SOCKET sk, int64_t *size, char *name)
+receive_message (SOCKET sk, long long *size, char *name)
 {
         int           type, blocks, extra;
         struct header packet;
@@ -193,7 +194,7 @@ receive_message (SOCKET sk, int64_t *size, char *name)
                 /* Read protocol.c for an explanation */
                 blocks = ntohl(packet.blocks); 
                 extra  = ntohl(packet.extra);
-                *size  = ((int64_t) blocks << 16) + extra;
+                *size  = ((long long) blocks << 16) + extra;
         }
 
         if (name != NULL) {

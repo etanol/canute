@@ -50,6 +50,8 @@
 typedef int socklen_t;
 typedef struct __stat64 stat_info_t;
 extern int _stat64 (const char *path, struct __stat64 *buffer);
+extern int fseeko  (FILE *stream, off_t offset, int whence);
+/* fseeko() implemented in util.c */
 
 #else
 
@@ -61,6 +63,7 @@ extern int _stat64 (const char *path, struct __stat64 *buffer);
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <unistd.h>
+#include <termios.h>
 #include <time.h>
 #define  INVALID_SOCKET -1
 #define  SOCKET_ERROR   -1
@@ -73,6 +76,11 @@ typedef int SOCKET;
 typedef struct stat stat_info_t;
 
 #endif  /* WIN32 */
+
+/* Solaris needs this */
+#ifndef INADDR_NONE
+#define INADDR_NONE -1
+#endif
 
 /* Helper macro: True if str is NOT "." or ".." */
 #define NOT_SELF_OR_PARENT(str) \
@@ -95,17 +103,17 @@ struct header {
 /***************************  FUNCTION PROTOTYPES  ***************************/
 
 /* feedback.c */
-void setup_progress  (char *name, int64_t size, int64_t offset);
+void setup_progress  (char *name, long long size, long long offset);
 void show_progress   (size_t increment);
 void finish_progress (void);
 
 /* net.c */
-SOCKET open_connection_server (uint16_t port);
-SOCKET open_connection_client (char *host, uint16_t port);
+SOCKET open_connection_server (unsigned short port);
+SOCKET open_connection_client (char *host, unsigned short port);
 void   send_data              (SOCKET sk, char *buf, size_t count);
 void   receive_data           (SOCKET sk, char *buf, size_t count);
-void   send_message           (SOCKET sk, int type, int64_t size, char *name);
-int    receive_message        (SOCKET sk, int64_t *size, char *name);
+void   send_message           (SOCKET sk, int type, long long size, char *name);
+int    receive_message        (SOCKET sk, long long *size, char *name);
 
 /* protocol.c */
 void send_item    (SOCKET sk, char *name);
@@ -115,6 +123,6 @@ int  receive_item (SOCKET sk);
 char *basename (char *path);
 void  error    (char *msg, ...);
 void  fatal    (char *msg, ...);
-int   fseeko   (FILE *stream, off_t offset, int whence);
 void  help     (char *argv0);
+/* fseeko() also implemented, but only in HASEFROCH */
 

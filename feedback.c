@@ -18,14 +18,15 @@
 
 /****************  PRIVATE DATA (Progress state information)  ****************/
 
+static long long      total_size;
+static long long      completed_size;
+static long long      initial_offset;
 static int            terminal_width;
-static int64_t        total_size;
-static int64_t        completed_size;
-static int64_t        initial_offset;
+static int            delta_index;
+static char           bar[512];  /* A reasonable unreachable value */
+static float          delta[16];
 static struct timeval init_time;
 static struct timeval last_time;
-static float          delta[16];
-static int            delta_index;
 
 
 /****************************  PRIVATE FUNCTIONS  ****************************/
@@ -46,15 +47,11 @@ query_terminal_width (void)
         if (GetConsoleScreenBufferInfo(GetStdHandle(STD_ERROR_HANDLE), &csbi))
                 w = csbi.dwSize.X;
 #else
-        int            fd, e;
         struct winsize wsz;
 
-        fd = fileno(stderr);
-        e  = ioctl(fd, TIOCGWINSZ, &wsz);
-        if (e > -1)
+        if (ioctl(fileno(stderr), TIOCGWINSZ, &wsz) != -1)
             w = wsz.ws_col;
-#endif /* HASEFROCH */
-
+#endif
         return (w < BAR_MINIMUM_WIDTH ? BAR_MINIMUM_WIDTH : w);
 }
 
@@ -121,7 +118,7 @@ elapsed_time (struct timeval *old_time, struct timeval *new_time)
  * thousand separators.
  */
 static char *
-pretty_number (int64_t num)
+pretty_number (long long num)
 {
         static char str[16];
         char        ugly[12];
@@ -130,7 +127,7 @@ pretty_number (int64_t num)
 #ifdef HASEFROCH
         i = snprintf(ugly, 12, "%I64d", num);
 #else
-        i = snprintf(ugly, 12, "%lld", (long long) num);
+        i = snprintf(ugly, 12, "%lld", num);
 #endif
         j = i + (i - 1) / 3;
         str[j] = '\0';
@@ -230,7 +227,6 @@ draw_bar (void)
         int   eta, bar_size = terminal_width - BAR_DATA_WIDTH;
         float percent, fill, speed, av_delta;
         float ofill; /* For initial offset */
-        char  bar[bar_size];
 
         /* Some temporary calculations have to done in floating point
          * representation because of overflow issues */
@@ -271,7 +267,7 @@ draw_bar (void)
  * Prepare progress output for a single file.
  */
 void
-setup_progress (char *name, int64_t size, int64_t offset)
+setup_progress (char *name, long long size, long long offset)
 {
         int i;
 
