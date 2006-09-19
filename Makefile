@@ -11,9 +11,9 @@
 
 CC       ?= gcc
 HCC      := i586-mingw32msvc-gcc
-CFLAGS   ?= -O2 -Wall -fomit-frame-pointer -DFLEXBAR_SUPPORT
+CFLAGS   ?= -O2 -Wall -fomit-frame-pointer
 LDFLAGS  ?= -Wl,-s,-O1
-DBGFLAGS ?= -Wall -O0 -g -pg -DDEBUG -DFLEXBAR_SUPPORT
+DBGFLAGS ?= -Wall -O0 -g -pg -DDEBUG
 
 Header      := canute.h
 Sources     := canute.c feedback.c net.c protocol.c util.c

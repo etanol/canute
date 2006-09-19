@@ -129,7 +129,7 @@ pretty_number (long long num)
 #else
         i = snprintf(ugly, 12, "%lld", num);
 #endif
-        j = i + (i - 1) / 3;
+        j = i + ((i - 1) / 3);
         str[j] = '\0';
         do {
                 str[--j] = ugly[--i]; if (i == 0) break;

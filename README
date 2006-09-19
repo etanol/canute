@@ -17,71 +17,72 @@ TABLE OF CONTENTS
 ===============
 
 Canute is a small command line utility to transfer files and directories
-over the network. It doesn't have authentication nor any other kind of
+over the network.  It doesn't have authentication nor any other kind of
 privileges.  It can be handy in a number of situations, specially on LAN.
 
-For example, imagine you are with a friend and he has a big CD/DVD image you
-want (whatever Linux distro). Depending on the operating systems you have,
-there are some ways of doing the copy:
+For example, imagine you are with a friend and he has a big CD/DVD image
+you want (whatever Linux distro).  Depending on the operating systems you
+have, there are some ways of doing the copy:
 
-   - FTP: Set up a server (you need root privileges for that) and then allow
-     anonnymous upload, create a new account for your friend or give him access
-     using your account. Don't forget a good FTP client
+   - FTP: Set up a server (you need root privileges for that) and then
+     allow anonnymous upload, create a new account for your friend or give
+     him access using your account.  Don't forget a good FTP client
 
    - HTTP: Maybe handier than FTP but upload is a bit trickier.
 
    - SFTP/SSH: This is account based so give new accounts or your own.
 
-   - RSync: If you want to use it two way you need to transfer over SSH, then
-     you are in the same situation as before. Otherwise both of you should
-     configure a server with the appropiate modules (which, again, requires
-     root privileges).
+   - RSync: If you want to use it two way you need to transfer over SSH,
+     then you are in the same situation as before.  Otherwise both of you
+     should configure a server with the appropiate modules (which, again,
+     requires root privileges).
 
-   - NFS: Hasefroch does not easily support it. This is not as hard as it used
-     to be thanks to the modern Linux distributions. But you need at least two
-     servers: the port mapper and the nfsd. Not mentioning the kernel support,
-     the permission grant from the server (/etc/hosts.allow), etc...  And it's
-     quite slow for big files.
+   - NFS: Hasefroch does not easily support it.  This is not as hard as it
+     used to be thanks to the modern Linux distributions.  But you need at
+     least two servers: the port mapper and the nfsd.  Not mentioning the
+     kernel support, the permission grant from the server
+     (/etc/hosts.allow), etc...   And it's quite slow for big files.
 
    - SMB: Very similar to NFS but slower.
 
    - Finally you can waste a CD/DVD burning that ISO image and giving it to
      your friend.
 
-With Canute you use the same binary for all tasks: sending or receiving. No
-need for installation, just the damn binary.
+With Canute you use the same binary for all tasks: sending or receiving.
+No need for installation, just the damn binary.
 
 
 
 2. USAGE
 ========
 
-There are two couples of concepts: server-client and sender-receiver. The
+There are two couples of concepts: server-client and sender-receiver.  The
 server-client pair only defines who (of the two peers) has to execute the
-application first. The sender-receiver defines the direction of the transfer.
+application first.  The sender-receiver defines the direction of the
+transfer.
 
-Let's have host A and host B. The following scenarios show the commands and the
-order in which must be executed.
+Let's have host A and host B.  The following scenarios show the commands
+and the order in which must be executed.
 
-::: Scenario 1. A sends files to B. This is the usual way of working.
+==> Scenario 1.  A sends files to B.  This is the usual way of working.
 
 host_A$ canute send file1 file2 ...
 host_B$ canute get host_A
 
-::: Scenario 2. A sends files to B, but A is behind a firewall and cannot open
-    ports (NAT/PAT)
+==> Scenario 2.  A sends files to B, but A is behind a firewall and cannot
+    open ports (NAT/PAT)
 
 host_B$ canute getserv
 host_A$ canute sendto host_B file1 file2 ...
 
 We see how server-client roles can be switched independently from
-server-receiver roles. The server is the peer who waits for the client to be
-connected. The server is not persistent and the port is closed when it
-finishes. That means you don't have to worry about leaving that port opened on
-your router if you want to do Internet transfers.
+server-receiver roles.  The server is the peer who waits for the client to
+be connected.  The server is not persistent and the port is closed when it
+finishes.  That means you don't have to worry about leaving that port
+opened on your router if you want to do Internet transfers.
 
-You can also choose a different port than the default (1121/tcp) specifying it
-after the Canute sub-command, like this
+You can also choose a different port than the default (1121/tcp) specifying
+it after the Canute sub-command, like this
 
 host_A$ canute send:5030 file1 file2 ...
 host_B$ canute get:5030 host_A
@@ -103,18 +104,18 @@ Canute can now compile in many UNIX flavours, as well as in Hasefroch
 nativelly (win32) using MinGW.
 
 The Makefile is written using some GNU Make extensions (beware *BSD users,
-don't forget to use "gmake"). If you're compiling within a GNU environment
+don't forget to use "gmake").  If you're compiling within a GNU environment
 (GCC), as many open source Unices are, you don't need to do any special
-tricks. Execute "make help" to find out what you need.
+tricks.  Execute "make help" to find out what you need.
 
-Commercial UNIX variants do not offer a GNU environment, mainly because they
-have their propietary C compiler, therefore compiler flags must be modified.
-The Makefile has been written to allow these kind of changes directly from
-the command line. Thus no code has to be modified.
+Commercial UNIX variants do not offer a GNU environment, mainly because
+they have their propietary C compiler, therefore compiler flags must be
+modified.  The Makefile has been written to allow these kind of changes
+directly from the command line.  Thus no code has to be modified.
 
 Thanks to the Department of Computer Architecture at the Universidad
 Politècnica de Catalunya (http://www.ac.upc.edu), a couple of different
-flavours have been tested. Obviously, if you have GCC as your default
+flavours have been tested.  Obviously, if you have GCC as your default
 compiler in one of these Unices, you don't need to follow the next
 instructions.
 
@@ -125,9 +126,10 @@ instructions.
 There are two issues to treat when dealing with networked applications.
 First, there's no herror() function available (used to display DNS errors).
 And sendo, and most important, you need to link your binary against
-libsocket and libnsl. In order to solve the fist problem, there is a slight
-modification of a conditional preprocessor directive (net.c, line 87) to
-automatically replace the herror() call. To compile successfully do:
+libsocket and libnsl.  In order to solve the fist problem, there is a
+slight modification of a conditional preprocessor directive (net.c, line
+87) to automatically replace the herror() call.  To compile successfully
+do:
 
 gmake 'CFLAGS=-DOMIT_HERROR' 'LDFLAGS=-s -lsocket -lnsl'
 
@@ -136,28 +138,28 @@ gmake 'CFLAGS=-DOMIT_HERROR' 'LDFLAGS=-s -lsocket -lnsl'
 -----------------------------
 
 Previous versions of OSF1 (i.e. 4.0) do not support snprintf() nor
-vsnprintf(); we were too lazy to implement replacenet for them, therefore we
-decided not to give support for them.
+vsnprintf(); we were too lazy to implement replacenet for them, therefore
+we decided not to give support.
 
-Even with version 5.1 the compilation gets a bit complicated. You have to
+Even with version 5.1 the compilation gets a bit complicated.  You have to
 compile in two passes, first execute this:
 
 gmake 'CFLAGS='
 
-Then it will compile until net.c, where you'll see compilation errors. Don't
-worry, just run the command:
+Then it will compile until net.c, where you'll see compilation errors.
+Don't worry, just run the command:
 
 gmake 'CFLAGS=-D_XOPEN_SOURCE=500' 'LDFLAGS=-Wl,-s'
 
-And you'll have your brand new Canute binary. Don't try to be smarter by
-compiling everything with "-D_XOPEN_SOURCE=500" because then feedback.c will
-fail.
+And you'll have your brand new Canute binary.  Don't try to be smarter by
+compiling everything with "-D_XOPEN_SOURCE=500" because then feedback.c
+will fail.
 
 
 3.3 HP-UX
 ---------
 
-Here is even easier than in Solaris. Just clear the compiler flags to have
+Here is even easier than in Solaris.  Just clear the compiler flags to have
 it working:
 
 gmake 'CFLAGS=' 'LDFLAGS=-s'
@@ -167,7 +169,7 @@ In case you want to suppress those annoying warnings at net.c, use this:
 gmake 'CFLAGS=-D_XOPEN_SOURCE_EXTENDED' 'LDFLAGS=-s'
 
 If you compile in a PA 1.x system, the same binary will work in a PA 2.0
-system (or it seems, not tested yet). You can make a "portable" binary
+system (or it seems, not tested yet).  You can make a "portable" binary
 across different PA-RISC ABI versions using a compiler flag:
 
 gmake 'CFLAGS=+DAportable -D_XOPEN_SOURCE_EXTENDED' 'LDFLAGS=-s'
@@ -177,16 +179,17 @@ gmake 'CFLAGS=+DAportable -D_XOPEN_SOURCE_EXTENDED' 'LDFLAGS=-s'
 -------------------------
 
 As a Hasefroch average user, you are not expected to be interested in this
-part because we already provide a binary. But if you are interested in
-patching Canute yourself and producing binaries for Hasefroch you only need
-to know one thing: cross-compile it. Install MinGW (crossed) from your
-package manager and execute:
+part because we already provide a binary.  But if you'd like to patch
+Canute yourself and produce binaries for Hasefroch you only need to know
+one thing: cross-compile it.  Install MinGW (crossed) from your package
+manager and execute:
 
 make hase
 
 If you want to do it in Hasefroch, get GNU Make from "Unix tools for Win32"
-(http://unxutils.sourceforge.net) and MinGW. Tune up a bit the Makefile and
-compile as you like. Don't worry, the Makefile is very straightforward.
+(http://unxutils.sourceforge.net) and MinGW.  Tune up a bit the Makefile
+and compile as you like.  Don't worry, the Makefile is very
+straightforward.
 
 
 
@@ -196,12 +199,12 @@ compile as you like. Don't worry, the Makefile is very straightforward.
 canute.h: Dirty tricks to make the rest of the code portable and as #ifdef
           clean as possible.
 
-canute.c: Main function. Command line parsing and role selection
+canute.c: Main function.  Command line parsing and role selection
           (server-client, sender-receiver).
 
 feedback.c: User feedback module, progress bar, information and timing.
 
-net.c: Basic network management functions. Connection handling and block
+net.c: Basic network management functions.  Connection handling and block
        transfer.
 
 protocol.c: Sender-receiver negotiations and content transfers.
