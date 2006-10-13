@@ -79,36 +79,35 @@ static char databuf[CANUTE_BLOCK_SIZE];
  *
  * TODO: Skip policy could be refined.
  */
-static void
-receive_file (SOCKET sk, char *name, long long size)
+static void receive_file (SOCKET sk, char *name, long long size)
 {
-        int         e;
-        FILE       *file;
-        long long   received_bytes; /* Think about it also as "offset" */
-        size_t      b;
-        stat_info_t st;
+        int              e;
+        FILE            *file;
+        long long        received_bytes; /* Think about it also as "offset" */
+        size_t           b;
+        struct stat_info st;
 
-        e = stat(name, &st);
+        e = stat (name, &st);
         if (e == -1) {
                 /* Most probable: errno == ENOENT */
                 received_bytes = 0;
         } else if (st.st_size >= size) {
-                printf("--- Skipping file '%s'\n", name);
-                send_message(sk, REPLY_SKIP, 0, NULL);
+                printf ("--- Skipping file '%s'\n", name);
+                send_message (sk, REPLY_SKIP, 0, NULL);
                 return;
         } else {
                 received_bytes = (long long) st.st_size;
         }
 
-        file = fopen(name, "ab");
+        file = fopen (name, "ab");
         if (file == NULL) {
-                error("Cannot open file '%s'", name);
-                send_message(sk, REPLY_SKIP, 0, NULL);
+                error ("Cannot open file '%s'", name);
+                send_message (sk, REPLY_SKIP, 0, NULL);
                 return;
         }
 
-        send_message(sk, REPLY_ACCEPT, received_bytes, NULL);
-        setup_progress(name, size, received_bytes);
+        send_message (sk, REPLY_ACCEPT, received_bytes, NULL);
+        setup_progress (name, size, received_bytes);
 
         while (received_bytes < size) {
                 if (size - received_bytes > CANUTE_BLOCK_SIZE)
@@ -116,15 +115,15 @@ receive_file (SOCKET sk, char *name, long long size)
                 else
                         b = (size_t) (size - received_bytes);
 
-                receive_data(sk, databuf, b);
-                fwrite(databuf, 1, b, file);
-                show_progress(b);
+                receive_data (sk, databuf, b);
+                fwrite (databuf, 1, b, file);
+                show_progress (b);
                 received_bytes += b;
         }
 
-        finish_progress();
-        fflush(file);
-        fclose(file);
+        finish_progress ();
+        fflush (file);
+        fclose (file);
 }
 
 
@@ -142,38 +141,38 @@ send_file (SOCKET sk, char *name, long long size)
         char     *bname;
         FILE     *file;
 
-        bname = basename(name);
-        file  = fopen(name, "rb");
+        bname = basename (name);
+        file  = fopen (name, "rb");
         if (file == NULL) {
-                error("Cannot open file '%s'", bname);
+                error ("Cannot open file '%s'", bname);
                 return;
         }
 
-        send_message(sk, REQUEST_FILE, size, bname);
-        reply = receive_message(sk, &sent_bytes, NULL);
+        send_message (sk, REQUEST_FILE, size, bname);
+        reply = receive_message (sk, &sent_bytes, NULL);
         if (reply == REPLY_SKIP) {
-                fclose(file);
-                printf("--- Skipping file '%s'\n", bname);
+                fclose (file);
+                printf ("--- Skipping file '%s'\n", bname);
                 return;
         }
 
         if (sent_bytes > 0) {
-                e = fseeko(file, (off_t) sent_bytes, SEEK_SET);
+                e = fseeko (file, (off_t) sent_bytes, SEEK_SET);
                 if (e == -1)
-                        fatal("Could not seek file '%s'", bname);
+                        fatal ("Could not seek file '%s'", bname);
         }
 
-        setup_progress(bname, size, sent_bytes);
+        setup_progress (bname, size, sent_bytes);
 
         while (sent_bytes < size) {
-                b = fread(databuf, 1, CANUTE_BLOCK_SIZE, file);
-                send_data(sk, databuf, b);
-                show_progress(b);
+                b = fread (databuf, 1, CANUTE_BLOCK_SIZE, file);
+                send_data (sk, databuf, b);
+                show_progress (b);
                 sent_bytes += b;
         }
 
-        finish_progress();
-        fclose(file);
+        finish_progress ();
+        fclose (file);
 }
 
 
@@ -185,62 +184,61 @@ send_file (SOCKET sk, char *name, long long size)
  * Discover what kind of filesystem item 'name' represents and send it over the
  * connection.
  */
-void
-send_item (SOCKET sk, char *name)
+void send_item (SOCKET sk, char *name)
 {
-        int            e, reply;
-        char          *bname;
-        DIR           *dir;
-        struct dirent *dentry;
-        stat_info_t    st;
+        int              e, reply;
+        char            *bname;
+        DIR             *dir;
+        struct dirent   *dentry;
+        struct stat_info st;
 
-        e = stat(name, &st);
+        e = stat (name, &st);
         if (e == -1) {
-                error("Cannot stat item '%s'", basename(name));
+                error ("Cannot stat item '%s'", basename (name));
                 return;
         }
 
-        if (S_ISDIR(st.st_mode)) {
-                bname = basename(name);
-                dir   = opendir(name);
+        if (S_ISDIR (st.st_mode)) {
+                bname = basename (name);
+                dir   = opendir (name);
                 if (dir == NULL) {
-                        error("Cannot open dir '%s'", bname);
+                        error ("Cannot open dir '%s'", bname);
                         return;
                 }
 
-                e = chdir(name);
+                e = chdir (name);
                 if (e == -1) {
-                        closedir(dir);
-                        error("Cannot change to dir '%s'", bname);
+                        closedir (dir);
+                        error ("Cannot change to dir '%s'", bname);
                         return;
                 }
 
-                send_message(sk, REQUEST_BEGINDIR, 0, bname);
-                reply = receive_message(sk, NULL, NULL);
+                send_message (sk, REQUEST_BEGINDIR, 0, bname);
+                reply = receive_message (sk, NULL, NULL);
                 if (reply == REPLY_SKIP) {
-                        closedir(dir);
-                        printf("--- Skipping directory '%s'\n", bname);
-                        e = chdir("..");
+                        closedir (dir);
+                        printf ("--- Skipping directory '%s'\n", bname);
+                        e = chdir ("..");
                         if (e == -1)
-                                fatal("Could not change to parent directory");
+                                fatal ("Could not change to parent directory");
                         return;
                 }
 
-                printf(">>> Entering directory '%s'\n", bname);
-                dentry = readdir(dir);
+                printf (">>> Entering directory '%s'\n", bname);
+                dentry = readdir (dir);
                 while (dentry != NULL) {
-                        if (NOT_SELF_OR_PARENT(dentry->d_name))
-                                send_item(sk, dentry->d_name);
-                        dentry = readdir(dir);
+                        if (NOT_SELF_OR_PARENT (dentry->d_name))
+                                send_item (sk, dentry->d_name);
+                        dentry = readdir (dir);
                 }
 
-                closedir(dir);
-                e = chdir("..");
+                closedir (dir);
+                e = chdir ("..");
                 if (e == -1)
-                        fatal("Could not change to parent directory");
-                send_message(sk, REQUEST_ENDDIR, 0, NULL);
+                        fatal ("Could not change to parent directory");
+                send_message (sk, REQUEST_ENDDIR, 0, NULL);
         } else {
-                send_file(sk, name, st.st_size);
+                send_file (sk, name, st.st_size);
         }
 }
 
@@ -259,36 +257,36 @@ receive_item (SOCKET sk)
         int         e, request;
         long long   size;
 
-        request = receive_message(sk, &size, namebuf);
+        request = receive_message (sk, &size, namebuf);
 
         switch (request) {
         case REQUEST_FILE:
-                receive_file(sk, namebuf, size);
+                receive_file (sk, namebuf, size);
                 break;
 
         case REQUEST_BEGINDIR:
-                mkdir(namebuf);
-                e = chdir(namebuf);
+                mkdir (namebuf);
+                e = chdir (namebuf);
                 if (e == -1) {
-                        error("Cannot change to dir '%s'", namebuf);
-                        send_message(sk, REPLY_SKIP, 0, NULL);
+                        error ("Cannot change to dir '%s'", namebuf);
+                        send_message (sk, REPLY_SKIP, 0, NULL);
                 } else {
-                        printf(">>> Entering directory '%s'\n",  namebuf);
-                        send_message(sk, REPLY_ACCEPT, 0, NULL);
+                        printf (">>> Entering directory '%s'\n",  namebuf);
+                        send_message (sk, REPLY_ACCEPT, 0, NULL);
                 }
                 break;
 
         case REQUEST_ENDDIR:
-                e = chdir("..");
+                e = chdir ("..");
                 if (e == -1)
-                        fatal("Could not change to parent directory");
+                        fatal ("Could not change to parent directory");
                 break;
 
         case REQUEST_END:
                 return 1;
 
         default:
-                fatal("Unexpected header type (%d)", request);
+                fatal ("Unexpected header type (%d)", request);
         }
 
         return 0;

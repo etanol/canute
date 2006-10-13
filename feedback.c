@@ -44,13 +44,13 @@ query_terminal_width (void)
 #ifdef HASEFROCH
         CONSOLE_SCREEN_BUFFER_INFO csbi;
 
-        if (GetConsoleScreenBufferInfo(GetStdHandle(STD_ERROR_HANDLE), &csbi))
+        if (GetConsoleScreenBufferInfo (GetStdHandle (STD_ERROR_HANDLE), &csbi))
                 w = csbi.dwSize.X;
 #else
         struct winsize wsz;
 
-        if (ioctl(fileno(stderr), TIOCGWINSZ, &wsz) != -1)
-            w = wsz.ws_col;
+        if (ioctl (fileno (stderr), TIOCGWINSZ, &wsz) != -1)
+                w = wsz.ws_col;
 #endif
         return (w < BAR_MINIMUM_WIDTH ? BAR_MINIMUM_WIDTH : w);
 }
@@ -72,7 +72,7 @@ gettimeofday (struct timeval *time, void *dummy)
                 uint64_t as_long;
         } ft;
 
-        GetSystemTimeAsFileTime(&ft.as_ft);
+        GetSystemTimeAsFileTime (&ft.as_ft);
         ft.as_long   -= 116444736000000000ULL;
         ft.as_long   /= 10;
         time->tv_sec  = ft.as_long / 1000000;
@@ -125,9 +125,9 @@ pretty_number (long long num)
         int         i, j;
 
 #ifdef HASEFROCH
-        i = snprintf(ugly, 12, "%I64d", num);
+        i = snprintf (ugly, 12, "%I64d", num);
 #else
-        i = snprintf(ugly, 12, "%lld", num);
+        i = snprintf (ugly, 12, "%lld", num);
 #endif
         j = i + ((i - 1) / 3);
         str[j] = '\0';
@@ -160,11 +160,11 @@ pretty_time (int secs)
         min  = min % 60;
 
         if (hour > 99)
-                sprintf(str, ">4 Days");
+                strcpy (str, ">4 Days");
         else if (hour > 0)
-                snprintf(str, 10, "%d:%02d:%02d", hour, min, sec);
+                snprintf (str, 10, "%d:%02d:%02d", hour, min, sec);
         else
-                snprintf(str, 6, "%d:%02d", min, sec);
+                snprintf (str, 6, "%d:%02d", min, sec);
 
         return str;
 }
@@ -195,7 +195,7 @@ pretty_speed (float rate)
                 metric = "B/s";
         }
 
-        snprintf(str, 16, "%4.1f %s", rate, metric);
+        snprintf (str, 16, "%4.1f %s", rate, metric);
         return str;
 }
 
@@ -233,29 +233,29 @@ draw_bar (void)
         percent = ((float) completed_size / (float) total_size) * 100.0;
         fill    = ((float) bar_size * percent) / 100.0;
 
-        memset(bar, ' ', bar_size);
-        memset(bar, '=', (size_t) fill);
+        memset (bar, ' ', bar_size);
+        memset (bar, '=', (size_t) fill);
         if (initial_offset > 0) {
                 ofill = ((float) initial_offset / (float) total_size)
                         * (float) bar_size;
-                memset(bar, '+', (size_t) ofill);
+                memset (bar, '+', (size_t) ofill);
         }
         bar[bar_size] = '\0';
 
         /* Loop unrolled */
-        av_delta = (delta[0]   + delta[1]  + delta[2]  + delta[3]  + delta[4]
-                   + delta[5]  + delta[6]  + delta[7]  + delta[8]  + delta[9]
-                   + delta[10] + delta[11] + delta[12] + delta[13] + delta[14]
-                   + delta[15]) / 16.0;
+        av_delta = (delta[0]    + delta[1]  + delta[2]  + delta[3]  + delta[4]
+                    + delta[5]  + delta[6]  + delta[7]  + delta[8]  + delta[9]
+                    + delta[10] + delta[11] + delta[12] + delta[13] + delta[14]
+                    + delta[15]) / 16.0;
 
         speed = (float) CANUTE_BLOCK_SIZE / av_delta;
         eta   = (int) ((float) (total_size - completed_size) / speed);
 
         /* Print all */
-        printf("\r%3d%% [%s] %-14s %10s ETA %-8s", (int) percent, bar,
-               pretty_number(completed_size), pretty_speed(speed),
-               pretty_time(eta));
-        fflush(stdout);
+        printf ("\r%3d%% [%s] %-14s %10s ETA %-8s", (int) percent, bar,
+                pretty_number (completed_size), pretty_speed (speed),
+                pretty_time (eta));
+        fflush (stdout);
 }
 
 
@@ -280,17 +280,17 @@ setup_progress (char *name, long long size, long long offset)
         }
 
         delta_index    = 0;
-        terminal_width = query_terminal_width();
+        terminal_width = query_terminal_width ();
         total_size     = size;
         initial_offset = offset;
         completed_size = offset;
 
-        printf("*** Transferring '%s' (%s bytes):\n", name,
-               pretty_number(size));
+        printf ("*** Transferring '%s' (%s bytes):\n", name,
+                pretty_number (size));
 
         /* We watch the clock before and after the whole transfer to estimate an
          * average speed to be shown at the end. */
-        gettimeofday(&init_time, NULL);
+        gettimeofday (&init_time, NULL);
         last_time = init_time;
 }
 
@@ -305,9 +305,9 @@ show_progress (size_t increment)
 {
         struct timeval now;
 
-        gettimeofday(&now, NULL);
+        gettimeofday (&now, NULL);
 
-        delta[delta_index] = elapsed_time(&last_time, &now);
+        delta[delta_index] = elapsed_time (&last_time, &now);
 
         delta_index++;
         delta_index &= 0x0F; /* delta_index %= 16; */
@@ -315,7 +315,7 @@ show_progress (size_t increment)
         completed_size += increment;
         last_time       = now;
 
-        draw_bar();
+        draw_bar ();
 }
 
 
@@ -330,13 +330,13 @@ finish_progress (void)
         struct timeval now;
         float          total_elapsed, av_rate;
 
-        gettimeofday(&now, NULL);
+        gettimeofday (&now, NULL);
 
-        total_elapsed = elapsed_time(&init_time, &now);
+        total_elapsed = elapsed_time (&init_time, &now);
         av_rate       = (float) (total_size - initial_offset) / total_elapsed;
 
-        printf("\nCompleted %s bytes in %s (Average Rate: %s)\n\n",
-               pretty_number(total_size - initial_offset),
-               pretty_time(total_elapsed), pretty_speed(av_rate));
+        printf ("\nCompleted %s bytes in %s (Average Rate: %s)\n\n",
+                pretty_number (total_size - initial_offset),
+                pretty_time (total_elapsed), pretty_speed (av_rate));
 }
 

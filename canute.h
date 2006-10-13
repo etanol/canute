@@ -46,9 +46,9 @@
 #define  HASEFROCH
 #define  CCP_CAST (const char *)
 #define  IS_PATH_SEPARATOR(x) ((x) == '\\' || (x) == '/')
+#define  stat_info __stat64
 #define  stat(path, buf) _stat64((path), (buf))
 typedef int socklen_t;
-typedef struct __stat64 stat_info_t;
 extern int _stat64 (const char *path, struct __stat64 *buffer);
 extern int fseeko  (FILE *stream, off_t offset, int whence);
 /* fseeko() implemented in util.c */
@@ -72,8 +72,8 @@ extern int fseeko  (FILE *stream, off_t offset, int whence);
 #define  IS_PATH_SEPARATOR(x) ((x) == '/')
 #define  closesocket(sk) close(sk)
 #define  mkdir(path) mkdir(path, 0755)
+#define  stat_info stat
 typedef int SOCKET;
-typedef struct stat stat_info_t;
 
 #endif  /* WIN32 */
 
