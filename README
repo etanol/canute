@@ -17,7 +17,7 @@ TABLE OF CONTENTS
 ===============
 
 Canute is a small command line utility to transfer files and directories
-over the network.  It doesn't have authentication nor any other kind of
+over the network.  It does not have authentication nor any other kind of
 privileges.  It can be handy in a number of situations, specially on LAN.
 
 For example, imagine you are with a friend and he has a big CD/DVD image
@@ -25,7 +25,7 @@ you want (whatever Linux distro).  Depending on the operating systems you
 have, there are some ways of doing the copy:
 
    - FTP: Set up a server (you need root privileges for that) and then
-     allow anonnymous upload, create a new account for your friend or give
+     allow anonymous upload, create a new account for your friend or give
      him access using your account.  Don't forget a good FTP client
 
    - HTTP: Maybe handier than FTP but upload is a bit trickier.
@@ -34,19 +34,19 @@ have, there are some ways of doing the copy:
 
    - RSync: If you want to use it two way you need to transfer over SSH,
      then you are in the same situation as before.  Otherwise both of you
-     should configure a server with the appropiate modules (which, again,
+     should configure a server with the appropriate modules (which, again,
      requires root privileges).
 
    - NFS: Hasefroch does not easily support it.  This is not as hard as it
      used to be thanks to the modern Linux distributions.  But you need at
      least two servers: the port mapper and the nfsd.  Not mentioning the
      kernel support, the permission grant from the server
-     (/etc/hosts.allow), etc...   And it's quite slow for big files.
+     (/etc/hosts.allow), etc...   And it is quite slow for big files.
 
    - SMB: Very similar to NFS but slower.
 
-   - Finally you can waste a CD/DVD burning that ISO image and giving it to
-     your friend.
+   - Finally, you could also waste a CD/DVD burning that ISO image and
+     giving it to your friend.
 
 With Canute you use the same binary for all tasks: sending or receiving.
 No need for installation, just the damn binary.
@@ -76,9 +76,9 @@ host_B$ canute getserv
 host_A$ canute sendto host_B file1 file2 ...
 
 We see how server-client roles can be switched independently from
-server-receiver roles.  The server is the peer who waits for the client to
+sender-receiver roles.  The server is the peer who waits for the client to
 be connected.  The server is not persistent and the port is closed when it
-finishes.  That means you don't have to worry about leaving that port
+finishes.  That means you do not have to worry about leaving that port
 opened on your router if you want to do Internet transfers.
 
 You can also choose a different port than the default (1121/tcp) specifying
@@ -101,22 +101,22 @@ recursively.
 ==============
 
 Canute can now compile in many UNIX flavours, as well as in Hasefroch
-nativelly (win32) using MinGW.
+natively (win32) using MinGW.
 
 The Makefile is written using some GNU Make extensions (beware *BSD users,
-don't forget to use "gmake").  If you're compiling within a GNU environment
-(GCC), as many open source Unices are, you don't need to do any special
-tricks.  Execute "make help" to find out what you need.
+do not forget to use "gmake").  If you are compiling within a GNU
+environment (GCC), as many open source Unices are, you do not need to do
+any special tricks.  Execute "make help" to find out what you need.
 
 Commercial UNIX variants do not offer a GNU environment, mainly because
-they have their propietary C compiler, therefore compiler flags must be
+they have their proprietary C compiler, therefore compiler flags must be
 modified.  The Makefile has been written to allow these kind of changes
 directly from the command line.  Thus no code has to be modified.
 
 Thanks to the Department of Computer Architecture at the Universidad
 Politècnica de Catalunya (http://www.ac.upc.edu), a couple of different
 flavours have been tested.  Obviously, if you have GCC as your default
-compiler in one of these Unices, you don't need to follow the next
+compiler in one of these Unices, you do not need to follow the next
 instructions.
 
 
@@ -124,10 +124,10 @@ instructions.
 -----------------------
 
 There are two issues to treat when dealing with networked applications.
-First, there's no herror() function available (used to display DNS errors).
-And sendo, and most important, you need to link your binary against
-libsocket and libnsl.  In order to solve the fist problem, there is a
-slight modification of a conditional preprocessor directive (net.c, line
+First, there is no herror() function available (used to display DNS
+errors).  And second, and most important, you need to link your binary
+against libsocket and libnsl.  In order to solve the fist problem, there is
+a slight modification of a conditional preprocessor directive (net.c, line
 87) to automatically replace the herror() call.  To compile successfully
 do:
 
@@ -138,7 +138,7 @@ gmake 'CFLAGS=-DOMIT_HERROR' 'LDFLAGS=-s -lsocket -lnsl'
 -----------------------------
 
 Previous versions of OSF1 (i.e. 4.0) do not support snprintf() nor
-vsnprintf(); we were too lazy to implement replacenet for them, therefore
+vsnprintf(); we were too lazy to implement replacement for them, therefore
 we decided not to give support.
 
 Even with version 5.1 the compilation gets a bit complicated.  You have to
@@ -146,13 +146,13 @@ compile in two passes, first execute this:
 
 gmake 'CFLAGS='
 
-Then it will compile until net.c, where you'll see compilation errors.
-Don't worry, just run the command:
+Then it will compile until net.c, where you will see compilation errors.
+Do not worry, just run the command:
 
 gmake 'CFLAGS=-D_XOPEN_SOURCE=500' 'LDFLAGS=-Wl,-s'
 
-And you'll have your brand new Canute binary.  Don't try to be smarter by
-compiling everything with "-D_XOPEN_SOURCE=500" because then feedback.c
+And you will have your brand new Canute binary.  Do not try to be smarter
+by compiling everything with "-D_XOPEN_SOURCE=500" because then feedback.c
 will fail.
 
 
@@ -179,7 +179,7 @@ gmake 'CFLAGS=+DAportable -D_XOPEN_SOURCE_EXTENDED' 'LDFLAGS=-s'
 -------------------------
 
 As a Hasefroch average user, you are not expected to be interested in this
-part because we already provide a binary.  But if you'd like to patch
+part because we already provide a binary.  But if you would like to patch
 Canute yourself and produce binaries for Hasefroch you only need to know
 one thing: cross-compile it.  Install MinGW (crossed) from your package
 manager and execute:
@@ -188,49 +188,48 @@ make hase
 
 If you want to do it in Hasefroch, get GNU Make from "Unix tools for Win32"
 (http://unxutils.sourceforge.net) and MinGW.  Tune up a bit the Makefile
-and compile as you like.  Don't worry, the Makefile is very
-straightforward.
+and compile as you like.  The Makefile is very straightforward.
 
 
 
 4. SOURCE CODE FILES
 ====================
 
-canute.h: Dirty tricks to make the rest of the code portable and as #ifdef
-          clean as possible.
+canute.h  : Dirty tricks to make the rest of the code portable and as
+            #ifdef clean as possible.
 
-canute.c: Main function.  Command line parsing and role selection
-          (server-client, sender-receiver).
+canute.c  : Main function.  Command line parsing and role selection
+            (server-client, sender-receiver).
 
 feedback.c: User feedback module, progress bar, information and timing.
 
-net.c: Basic network management functions.  Connection handling and block
-       transfer.
+net.c     : Basic network management functions.  Connection handling and
+            block transfer.
 
 protocol.c: Sender-receiver negotiations and content transfers.
 
-util.c: Unclassified utility functions.
+util.c    : Unclassified utility functions.
 
 
 
 5. CREDITS
 ==========
 
-                 *** Original idea and current maintenance ***
-                                     C2H5OH
-                         http://etanol.doesntexist.org
+               *** Original idea and current maintenance ***
+                                  C2H5OH
+                       http://etanol.doesntexist.org
 
 
-                     *** Patch contributions and ideas ***
-                                      MKD
-                         http://www.claudiocamacho.org
+                   *** Patch contributions and ideas ***
+                                    MKD
+                       http://www.claudiocamacho.org
 
 
-                              *** Testing aid ***
-                                   Tito Houzy
-                                      MKD
+                            *** Testing aid ***
+                                Tito Houzy
+                                    MKD
 
 
-                           *** Initial win32 port ***
-                                   Plimo San
+                        *** Initial win32 port ***
+                                 Plimo San
 
