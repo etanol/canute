@@ -21,7 +21,7 @@ Objects     := $(Sources:.c=.o)
 HaseObjects := $(Sources:.c=.obj)
 
 # Phony targets
-.PHONY: unix hase debug clean help
+.PHONY: unix hase debug clean help dist
 
 # Target aliases
 unix : canute
@@ -54,6 +54,15 @@ endif
 %.s: %.c $(Header)
 	@echo ' Assembling        $@' && $(CC) $(CFLAGS) $(ARCH) -S $<
 
+# Repository maintainer targets (not listed in help)
+dist:
+	@hg archive /tmp/canute; \
+	cd /tmp; \
+	rm canute/.hg_archival.txt; \
+	zip -r9m canute.zip canute; \
+	cd -;\
+	mv /tmp/canute.zip .
+
 # Cleaning and help
 clean:
 	@-echo ' Cleaning objects and binaries' && \
@@ -65,7 +74,7 @@ help:
 	@echo '	unix  - Default target. Build the UNIX binary.'
 	@echo '	hase  - Build the Hasefroch binary (win32).'
 	@echo '	debug - Build the UNIX binary with debugging support.'
-	@echo '	clean - Clean objects and binaries.'
+	@echo '	clean  - Clean objects and binaries.'
 	@echo '	help  - This help.'
 	@echo ''
 	@echo 'NOTE: Enable custom optimization flags for the UNIX binary'

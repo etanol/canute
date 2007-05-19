@@ -44,7 +44,6 @@
 #include <windows.h>
 #include <winsock.h>
 #define  HASEFROCH
-#define  PATH_MAX    4096
 #define  MSG_WAITALL 0    /* Hasefroch sucks and does not define this */
 #define  CCP_CAST (const char *)
 #define  IS_PATH_SEPARATOR(x) ((x) == '\\' || (x) == '/')
@@ -82,6 +81,11 @@ typedef int SOCKET;
 /* Solaris needs this */
 #ifndef INADDR_NONE
 #define INADDR_NONE -1
+#endif
+
+/* PATH_MAX does not seem to be defined in Hasefroch nor in Solaris */
+#ifndef PATH_MAX
+#define PATH_MAX 4096
 #endif
 
 /* Helper macro: True if str is NOT "." or ".." */
