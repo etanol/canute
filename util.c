@@ -98,29 +98,6 @@ fseeko (FILE *stream, off_t offset, int whence)
 
         return 0;
 }
-
-
-/*
- * gettimeofday
- *
- * Simulate gettimeofday within win32 platforms.  This procedure is mainly
- * obtained from glib2/glib/gmain.c with a slight modification to avoid a
- * compilation warning.  The resulting assembler code is exactly the same.
- */
-static void
-gettimeofday (struct timeval *time, void *dummy)
-{
-        union {
-                FILETIME as_ft;
-                uint64_t as_long;
-        } ft;
-
-        GetSystemTimeAsFileTime(&ft.as_ft);
-        ft.as_long   -= 116444736000000000ULL;
-        ft.as_long   /= 10;
-        time->tv_sec  = ft.as_long / 1000000;
-        time->tv_usec = ft.as_long % 1000000;
-}
 #endif /* HASEFROCH */
 
 

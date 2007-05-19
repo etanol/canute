@@ -64,12 +64,37 @@ query_terminal_width (void)
  * and return the value as an integer number.  The value will bi positive if
  * t1 > t2, that is, t1 is later than t2.
  */
-int
+static int
 timeval_diff_in_millis (const struct timeval *t1, const struct timeval *t2)
 {
     return (t1->tv_sec - t2->tv_sec) * 1000
            + (t1->tv_usec - t2->tv_usec) / 1000;
 }
+
+
+#ifdef HASEFROCH
+/*
+ * gettimeofday
+ *
+ * Simulate gettimeofday within win32 platforms.  This procedure is mainly
+ * obtained from glib2/glib/gmain.c with a slight modification to avoid a
+ * compilation warning.  The resulting assembler code is exactly the same.
+ */
+static void
+gettimeofday (struct timeval *time, void *dummy)
+{
+        union {
+                FILETIME as_ft;
+                uint64_t as_long;
+        } ft;
+
+        GetSystemTimeAsFileTime(&ft.as_ft);
+        ft.as_long   -= 116444736000000000ULL;
+        ft.as_long   /= 10;
+        time->tv_sec  = ft.as_long / 1000000;
+        time->tv_usec = ft.as_long % 1000000;
+}
+#endif /* HASEFROCH */
 
 
 /*
