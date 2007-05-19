@@ -10,9 +10,9 @@
 /******************************************************************************/
 
 /* Constants */
-#define CANUTE_VERSION_STR  "v1.0"
+#define CANUTE_VERSION_STR  "v1.1"
 #define CANUTE_DEFAULT_PORT 1121
-#define CANUTE_NAME_LENGTH  239    /* Don't touch this */
+#define CANUTE_NAME_LENGTH  239  /* Don't touch this */
 #define CANUTE_BLOCK_BITS   16
 #define CANUTE_BLOCK_SIZE   (1 << CANUTE_BLOCK_BITS)
 #define CANUTE_BLOCK_MASK   (CANUTE_BLOCK_SIZE - 1)
@@ -104,7 +104,7 @@ struct header {
 
 /* feedback.c */
 void setup_progress  (char *name, long long size, long long offset);
-void show_progress   (size_t increment);
+void update_progress (size_t increment);
 void finish_progress (void);
 
 /* net.c */
@@ -120,9 +120,9 @@ void send_item    (SOCKET sk, char *name);
 int  receive_item (SOCKET sk);
 
 /* util.c */
-char *basename (char *path);
-void  error    (char *msg, ...);
-void  fatal    (char *msg, ...);
-void  help     (char *argv0);
+char *basename  (char *path);
+void  error     (char *msg, ...);
+void  fatal     (char *msg, ...);
+void  help      (char *argv0);
 /* fseeko() also implemented, but only in HASEFROCH */
 

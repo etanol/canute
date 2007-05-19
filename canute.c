@@ -11,6 +11,9 @@
 
 #include "canute.h"
 
+/* Working directory */
+static char cwd_buf[PATH_MAX];
+
 
 /*
  * Four concepts are important here: server, client, sender and receiver. For
@@ -26,19 +29,19 @@
 int
 main (int argc, char **argv)
 {
-        SOCKET         sk = -1; /* Quest for a warning free compilation */ 
-        char          *port_str;
+        SOCKET         sk = -1; /* Quest for a warning free compilation */
+        char          *port_str, *cwd;
         unsigned short port;
-        int            i, last, arg = 0;
-#ifdef HASEFROCH 
+        int            i, err, last, arg = 0;
+#ifdef HASEFROCH
         WSADATA  ws;
 
-        if (WSAStartup(MAKEWORD(1, 1), &ws)) 
+        if (WSAStartup(MAKEWORD(1, 1), &ws))
                 fatal("Starting WinSock");
         atexit ((void (*)())WSACleanup);
 #endif
 
-        if (argc < 2) 
+        if (argc < 2)
                 help(argv[0]);
 
         /* See if there is a port specification to override default */
@@ -71,14 +74,28 @@ main (int argc, char **argv)
                         help(argv[0]);
                 }
 
+                /* Save current working directory */
+                cwd = getcwd(cwd_buf, PATH_MAX);
+                if (cwd == NULL)
+                        error("Could not retrieve working directory."
+                              " This may produce some path errors.\n");
+
                 /* Adjust send buffer */
                 i = CANUTE_BLOCK_SIZE;
                 setsockopt(sk, SOL_SOCKET, SO_SNDBUF, CCP_CAST &i, sizeof(i));
 
                 /* Now we have the transmission channel open, so let's send
                  * everything we're supposed to send */
-                for (i = arg; i < argc; i++)
+                for (i = arg; i < argc; i++) {
                         send_item(sk, argv[i]);
+                        /* Return to original working directory.  This fixes a
+                         * potential bug when giving multiple arguments with
+                         * different path prefixes. */
+                        err = chdir(cwd);
+                        if (err == -1)
+                                error("Could not change working directory."
+                                      " This may produce some path errors.\n");
+                }
 
                 /* It's over. Notify the receiver to finish as well, please */
                 send_message(sk, REQUEST_END, 0, NULL);

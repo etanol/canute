@@ -113,11 +113,11 @@ static void receive_file (SOCKET sk, char *name, long long size)
                 if (size - received_bytes > CANUTE_BLOCK_SIZE)
                         b = CANUTE_BLOCK_SIZE;
                 else
-                        b = (size_t) (size - received_bytes);
+                        b = (size_t)(size - received_bytes);
 
                 receive_data(sk, databuf, b);
                 fwrite(databuf, 1, b, file);
-                show_progress(b);
+                update_progress(b);
                 received_bytes += b;
         }
 
@@ -144,15 +144,15 @@ send_file (SOCKET sk, char *name, long long size)
         bname = basename(name);
         file  = fopen(name, "rb");
         if (file == NULL) {
-                error ("Cannot open file '%s'", bname);
+                error("Cannot open file '%s'", bname);
                 return;
         }
 
         send_message(sk, REQUEST_FILE, size, bname);
         reply = receive_message(sk, &sent_bytes, NULL);
         if (reply == REPLY_SKIP) {
-                fclose (file);
-                printf ("--- Skipping file '%s'\n", bname);
+                fclose(file);
+                printf("--- Skipping file '%s'\n", bname);
                 return;
         }
 
@@ -167,7 +167,7 @@ send_file (SOCKET sk, char *name, long long size)
         while (sent_bytes < size) {
                 b = fread(databuf, 1, CANUTE_BLOCK_SIZE, file);
                 send_data(sk, databuf, b);
-                show_progress(b);
+                update_progress(b);
                 sent_bytes += b;
         }
 

@@ -1,3 +1,14 @@
+2007-05-19  etanol  <diptongo@gmail.com>
+
+	* Canute v1.1
+
+	- Fixed a bug when giving multiple arguments on the command line.
+	In some cases, the program did not return to the working directory
+	correctly.
+	- Progress bar now repaints at least every second, which reduces
+	de number of repaints on fast connections.
+	- Progress bar also can resize in the middle of a transfer.
+
 2006-08-19  etanol  <diptongo@gmail.com>
 
 	* Canute v1.0

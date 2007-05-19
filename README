@@ -56,8 +56,8 @@ No need for installation, just the damn binary.
 2. USAGE
 ========
 
-There are two couples of concepts: server-client and sender-receiver.  The
-server-client pair only defines who (of the two peers) has to execute the
+There are two pairs of concepts: server-client and sender-receiver.  The
+server-client couple only defines who (of the two peers) has to execute the
 application first.  The sender-receiver defines the direction of the
 transfer.
 

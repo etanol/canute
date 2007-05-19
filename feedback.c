@@ -11,6 +11,7 @@
 
 #include "canute.h"
 
+#define BAR_REFRESH_DELAY 1000
 #define BAR_DATA_WIDTH    47
 #define BAR_DEFAULT_WIDTH 80
 #define BAR_MINIMUM_WIDTH (BAR_DATA_WIDTH + 4)
@@ -21,10 +22,10 @@
 static long long      total_size;
 static long long      completed_size;
 static long long      initial_offset;
-static int            terminal_width;
 static int            delta_index;
-static char           bar[512];  /* A reasonable unreachable value */
-static float          delta[16];
+static int            delta_bytes[8];
+static int            delta_msecs[8];
+static char           bar[512];       /* A reasonable unreachable value */
 static struct timeval init_time;
 static struct timeval last_time;
 
@@ -56,58 +57,18 @@ query_terminal_width (void)
 }
 
 
-#ifdef HASEFROCH
 /*
- * gettimeofday
+ * timeval_diff_in_millis
  *
- * Simulate gettimeofday within win32 platforms. This procedure is mainly
- * obtained from glib2/glib/gmain.c with a slight modification to avoid a
- * compilation warning. The resulting assembler code is exactly the same.
+ * Calculate the time difference between two timeval structures in miliseconds
+ * and return the value as an integer number.  The value will bi positive if
+ * t1 > t2, that is, t1 is later than t2.
  */
-static void
-gettimeofday (struct timeval *time, void *dummy)
+int
+timeval_diff_in_millis (const struct timeval *t1, const struct timeval *t2)
 {
-        union {
-                FILETIME as_ft;
-                uint64_t as_long;
-        } ft;
-
-        GetSystemTimeAsFileTime(&ft.as_ft);
-        ft.as_long   -= 116444736000000000ULL;
-        ft.as_long   /= 10;
-        time->tv_sec  = ft.as_long / 1000000;
-        time->tv_usec = ft.as_long % 1000000;
-}
-#endif /* HASEFROCH */
-
-
-/*
- * elapsed_time
- *
- * Calculate the elapsed time from old_time to new_time in seconds as a floating
- * point to maintain microsecond accuracy. In case elapsed time is less than a
- * microsecond, then round it to that value so something greater than zero is
- * returned.
- */
-static float
-elapsed_time (struct timeval *old_time, struct timeval *new_time)
-{
-        struct timeval elapsed_time;
-        float          secs;
-
-        elapsed_time.tv_usec = new_time->tv_usec - old_time->tv_usec;
-        if (elapsed_time.tv_usec < 0) {
-                elapsed_time.tv_usec += 1000000;
-                old_time->tv_sec++;
-        }
-        elapsed_time.tv_sec = new_time->tv_sec - old_time->tv_sec;
-
-        secs = (float)elapsed_time.tv_sec + (float)elapsed_time.tv_usec * 1.e-6;
-        /* I know, real numbers should never be tested for equality */
-        if (secs == 0.0)
-                secs = 1.0e-6;
-
-        return secs;
+    return (t1->tv_sec - t2->tv_sec) * 1000
+           + (t1->tv_usec - t2->tv_usec) / 1000;
 }
 
 
@@ -181,7 +142,7 @@ pretty_speed (float rate)
 {
         static char str[16];
         char       *metric;
-        
+
         if (rate > 1024.0 * 1024.0 * 1024.0) {
                 rate  /= 1024.0 * 1024.0 * 1024.0;
                 metric = "G/s";
@@ -206,7 +167,7 @@ pretty_speed (float rate)
  * Calculate and displays the GNU Wget style progress bar. Then, this is mostly
  * stolen from GNU Wget too.
  *
- * This is the format: 
+ * This is the format:
  *
  * 999% [===...] 99,999,999,999 9999.9 X/s ETA 99:99:99
  *
@@ -218,14 +179,15 @@ pretty_speed (float rate)
  *      9999.9 X/s      -->  9 chars + 2 spaces
  *      ETA 99:99:99    --> 11 chars + 2 spaces
  *
- *      TOTAL           --> 40 chars + 7 spaces = 47 
+ *      TOTAL           --> 40 chars + 7 spaces = 47
  *      (As defined by BAR_DATA_WIDTH)
  */
 static void
 draw_bar (void)
 {
-        int   eta, bar_size = terminal_width - BAR_DATA_WIDTH;
-        float percent, fill, speed, av_delta;
+        int   eta, bar_size = query_terminal_width() - BAR_DATA_WIDTH;
+        int   bytes, msecs;
+        float percent, fill, speed;
         float ofill; /* For initial offset */
 
         /* Some temporary calculations have to done in floating point
@@ -234,7 +196,7 @@ draw_bar (void)
         fill    = ((float)bar_size * percent) / 100.0;
 
         memset(bar, ' ', bar_size);
-        memset(bar, '=', (size_t) fill);
+        memset(bar, '=', (size_t)fill);
         if (initial_offset > 0) {
                 ofill = ((float)initial_offset / (float)total_size)
                         * (float)bar_size;
@@ -242,14 +204,17 @@ draw_bar (void)
         }
         bar[bar_size] = '\0';
 
-        /* Loop unrolled */
-        av_delta = (delta[0]    + delta[1]  + delta[2]  + delta[3]  + delta[4]
-                    + delta[5]  + delta[6]  + delta[7]  + delta[8]  + delta[9]
-                    + delta[10] + delta[11] + delta[12] + delta[13] + delta[14]
-                    + delta[15]) / 16.0;
+        /* Caculate average speed and Estimated Time of Arrival.  Loops
+         * unrolled */
+        bytes =   delta_bytes[0] + delta_bytes[1] + delta_bytes[2]
+                + delta_bytes[3] + delta_bytes[4] + delta_bytes[5]
+                + delta_bytes[6] + delta_bytes[7];
+        msecs =   delta_msecs[0] + delta_msecs[1] + delta_msecs[2]
+                + delta_msecs[3] + delta_msecs[4] + delta_msecs[5]
+                + delta_msecs[6] + delta_msecs[7];
 
-        speed = (float)CANUTE_BLOCK_SIZE / av_delta;
-        eta   = (int) ((float) (total_size - completed_size) / speed);
+        speed = (float)bytes / ((float)msecs * 1e-3);
+        eta   = (int) ((float)(total_size - completed_size) / speed);
 
         /* Print all */
         printf("\r%3d%% [%s] %-14s %10s ETA %-8s", (int)percent, bar,
@@ -271,16 +236,16 @@ setup_progress (char *name, long long size, long long offset)
 {
         int i;
 
-        /* Initialize the delta array before every single transfer */
-        for (i = 0; i < 16; i += 4) {
-                delta[i]     = 1.0; 
-                delta[i + 1] = 1.0;
-                delta[i + 2] = 1.0;
-                delta[i + 3] = 1.0;
+        /* Initialize the delta arrays before every single transfer */
+        memset(delta_bytes, 0, sizeof(int) * 8);
+        for (i = 0; i < 8; i += 4) {
+                delta_msecs[i]     = 1;
+                delta_msecs[i + 1] = 1;
+                delta_msecs[i + 2] = 1;
+                delta_msecs[i + 3] = 1;
         }
 
         delta_index    = 0;
-        terminal_width = query_terminal_width ();
         total_size     = size;
         initial_offset = offset;
         completed_size = offset;
@@ -301,21 +266,28 @@ setup_progress (char *name, long long size, long long offset)
  * Update the history ring and show amount of transfer and percentage.
  */
 void
-show_progress (size_t increment)
+update_progress (size_t increment)
 {
         struct timeval now;
+        int            delay;
 
         gettimeofday(&now, NULL);
+        delay = timeval_diff_in_millis(&now, &last_time);
 
-        delta[delta_index] = elapsed_time(&last_time, &now);
+        delta_bytes[delta_index] += increment;
+        completed_size           += increment;
 
-        delta_index++;
-        delta_index &= 0x0F; /* delta_index %= 16; */
+        if (delay > BAR_REFRESH_DELAY) {
+            delta_msecs[delta_index] = delay;
 
-        completed_size += increment;
-        last_time       = now;
+            delta_index++;
+            delta_index &= 0x07;     /* delta_index %= 8; */
+            last_time    = now;
 
-        draw_bar();
+            draw_bar();
+
+            delta_bytes[delta_index] = 0;
+        }
 }
 
 
@@ -332,11 +304,12 @@ finish_progress (void)
 
         gettimeofday(&now, NULL);
 
-        total_elapsed = elapsed_time(&init_time, &now);
-        av_rate       = (float) (total_size - initial_offset) / total_elapsed;
+        total_elapsed = (float)timeval_diff_in_millis(&now, &init_time) * 1e-3;
+        av_rate       = (float)(total_size - initial_offset) / total_elapsed;
 
+        draw_bar();
         printf("\nCompleted %s bytes in %s (Average Rate: %s)\n\n",
                pretty_number(total_size - initial_offset),
-               pretty_time(total_elapsed), pretty_speed (av_rate));
+               pretty_time(total_elapsed), pretty_speed(av_rate));
 }
 

@@ -28,7 +28,7 @@ open_connection_server (unsigned short port)
         socklen_t          alen;
 
         bsk = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
-        if (bsk == INVALID_SOCKET) 
+        if (bsk == INVALID_SOCKET)
                 fatal("Could not create socket");
 
         saddr.sin_family      = AF_INET;
@@ -74,7 +74,7 @@ open_connection_client (char *host, unsigned short port)
         int                e;
 
         sk = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
-        if (sk == INVALID_SOCKET) 
+        if (sk == INVALID_SOCKET)
                 fatal("Creating socket");
 
         saddr.sin_family      = AF_INET;
@@ -96,10 +96,10 @@ open_connection_client (char *host, unsigned short port)
 
         /* Now we have a destination host */
         e = connect(sk, (SOCKADDR *)&saddr, sizeof(saddr));
-        if (e == SOCKET_ERROR) 
+        if (e == SOCKET_ERROR)
                 fatal("Connecting to host '%s'", host);
 
-        return sk; 
+        return sk;
 }
 
 
@@ -114,13 +114,13 @@ send_data (SOCKET sk, char *buf, size_t count)
 {
         int s; /* Sent bytes in one send() call */
 
-        while (count > 0) {
+        do {
                 s = send(sk, buf, count, 0);
-                if (s == SOCKET_ERROR) 
+                if (s == SOCKET_ERROR)
                         fatal("Sending data");
                 count -= s;
                 buf   += s;
-        }
+        } while (count > 0);
 }
 
 
@@ -135,13 +135,13 @@ receive_data (SOCKET sk, char *buf, size_t count)
 {
         int r; /* Received bytes in one recv() call */
 
-        while (count > 0) {
-                r = recv(sk, buf, count, 0);
-                if (r == SOCKET_ERROR) 
+        do {
+                r = recv(sk, buf, count, MSG_WAITALL);
+                if (r == SOCKET_ERROR)
                         fatal("Receiving data");
                 count -= r;
                 buf   += r;
-        }
+        } while (count > 0);
 }
 
 
@@ -192,7 +192,7 @@ receive_message (SOCKET sk, long long *size, char *name)
 
         if (size != NULL) {
                 /* Read protocol.c for an explanation */
-                blocks = ntohl(packet.blocks); 
+                blocks = ntohl(packet.blocks);
                 extra  = ntohl(packet.extra);
                 *size  = ((long long)blocks << 16) + extra;
         }
