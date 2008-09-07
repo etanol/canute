@@ -26,19 +26,18 @@ static char cwd_buf[PATH_MAX];
  *
  * Almost on any error the program aborts, look for calls to fatal().
  */
-int
-main (int argc, char **argv)
+int main (int argc, char **argv)
 {
-        SOCKET         sk = -1; /* Quest for a warning free compilation */
-        char          *port_str, *cwd;
-        unsigned short port;
-        int            i, err, last, arg = 0;
+        SOCKET          sk = -1; /* Quest for a warning free compilation */
+        char           *port_str, *cwd;
+        unsigned short  port;
+        int             i, err, last, arg = 0;
 #ifdef HASEFROCH
         WSADATA  ws;
 
         if (WSAStartup(MAKEWORD(1, 1), &ws))
                 fatal("Starting WinSock");
-        atexit ((void (*)())WSACleanup);
+        atexit ((void (*)()) WSACleanup);
 #endif
 
         if (argc < 2)
@@ -47,32 +46,36 @@ main (int argc, char **argv)
         /* See if there is a port specification to override default */
         port     = CANUTE_DEFAULT_PORT;
         port_str = strchr(argv[1], ':');
-        if (port_str != NULL) {
+        if (port_str != NULL)
+        {
                 *port_str = '\0';
                 port_str++;
-                port = (unsigned short)atoi(port_str);
+                port = (unsigned short) atoi(port_str);
         }
 
-        if (strncmp(argv[1], "send", 4) == 0) {
-
+        if (strncmp(argv[1], "send", 4) == 0)
+        {
                 /*********************/
                 /***  SENDER MODE  ***/
                 /*********************/
 
                 /* Open connection */
-                if (strcmp(argv[1], "send") == 0) {
+                if (strcmp(argv[1], "send") == 0)
+                {
                         if (argc < 3)
                                 help(argv[0]);
                         sk  = open_connection_server(port);
                         arg = 2;
-                } else if (strcmp(argv[1], "sendto") == 0) {
+                }
+                else if (strcmp(argv[1], "sendto") == 0)
+                {
                         if (argc < 4)
                                 help(argv[0]);
                         sk  = open_connection_client(argv[2], port);
                         arg = 3;
-                } else {
-                        help(argv[0]);
                 }
+                else
+                        help(argv[0]);
 
                 /* Save current working directory */
                 cwd = getcwd(cwd_buf, PATH_MAX);
@@ -86,7 +89,8 @@ main (int argc, char **argv)
 
                 /* Now we have the transmission channel open, so let's send
                  * everything we're supposed to send */
-                for (i = arg; i < argc; i++) {
+                for (i = arg;  i < argc;  i++)
+                {
                         send_item(sk, argv[i]);
                         /* Return to original working directory.  This fixes a
                          * potential bug when giving multiple arguments with
@@ -99,23 +103,24 @@ main (int argc, char **argv)
 
                 /* It's over. Notify the receiver to finish as well, please */
                 send_message(sk, REQUEST_END, 0, NULL);
-
-        } else if (strncmp(argv[1], "get", 3) == 0) {
-
+        }
+        else if (strncmp(argv[1], "get", 3) == 0)
+        {
                 /***********************/
                 /***  RECEIVER MODE  ***/
                 /***********************/
 
                 /* Open connection */
-                if (strcmp(argv[1], "get") == 0) {
+                if (strcmp(argv[1], "get") == 0)
+                {
                         if (argc < 3)
                                 help(argv[0]);
                         sk = open_connection_client(argv[2], port);
-                } else if (strcmp(argv[1], "getserv") == 0) {
-                        sk = open_connection_server(port);
-                } else {
-                        help(argv[0]);
                 }
+                else if (strcmp(argv[1], "getserv") == 0)
+                        sk = open_connection_server(port);
+                else
+                        help(argv[0]);
 
                 /* Adjust receive buffer */
                 i = CANUTE_BLOCK_SIZE;
@@ -124,10 +129,9 @@ main (int argc, char **argv)
                 do {
                         last = receive_item(sk);
                 } while (!last);
-
-        } else {
-                help(argv[0]);
         }
+        else
+                help(argv[0]);
 
         closesocket(sk);
         return EXIT_SUCCESS;

@@ -18,12 +18,12 @@
  * Strip absolute path. Similar to UNIX "basename" command but with a somewhat
  * dirty implementation.
  */
-char *
-basename (char *path)
+char *basename (char *path)
 {
-        int p = strlen(path) - 1;
+        int  p = strlen(path) - 1;
 
-        while (IS_PATH_SEPARATOR(path[p])) {
+        while (IS_PATH_SEPARATOR(path[p]))
+        {
                 path[p] = '\0';
                 p--;
         }
@@ -40,11 +40,10 @@ basename (char *path)
  *
  * Error message a la printf(). Custom message + system error string.
  */
-void
-error (char *msg, ...)
+void error (char *msg, ...)
 {
-        va_list pars;
-        char    s[128];
+        va_list  pars;
+        char     s[128];
 
         fputs("ERROR: ", stderr);
         va_start(pars, msg);
@@ -59,11 +58,10 @@ error (char *msg, ...)
  *
  * Fatal error. Same as error() but also exit failing (aborting).
  */
-void
-fatal (char *msg, ...)
+void fatal (char *msg, ...)
 {
-        va_list pars;
-        char    s[128];
+        va_list  pars;
+        char     s[128];
 
         fputs("\nFATAL ERROR: ", stderr);
         va_start(pars, msg);
@@ -82,16 +80,15 @@ fatal (char *msg, ...)
  * instead. But fpos_t is a composite type (struct) rather than a 64 bit integer
  * as in Hasefroch.
  */
-int
-fseeko (FILE *stream, off_t offset, int whence)
+int fseeko (FILE *stream, off_t offset, int whence)
 {
-        int    e;
-        fpos_t pos;
+        int     e;
+        fpos_t  pos;
 
         if (whence != SEEK_SET)
                 return -1;
 
-        pos = (fpos_t)offset;
+        pos = (fpos_t) offset;
         e   = fsetpos(stream, &pos);
         if (e != 0)
                 return -1;
@@ -106,8 +103,7 @@ fseeko (FILE *stream, off_t offset, int whence)
  *
  * Show command syntax and exit not successfully.
  */
-void
-help (char *argv0)
+void help (char *argv0)
 {
         printf("Canute " CANUTE_VERSION_STR "\n\n"
                "Syntax:\n"

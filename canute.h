@@ -97,12 +97,13 @@ typedef int SOCKET;
  * Transmission header packet. This defines what kind of item is going to be
  * transferred to the receiver.
  */
-struct header {
-        int  type;
-        int  reserved;
-        int  blocks;
-        int  extra;
-        char name[CANUTE_NAME_LENGTH + 1];
+struct header
+{
+        int   type;
+        int   reserved;
+        int   blocks;
+        int   extra;
+        char  name[CANUTE_NAME_LENGTH + 1];
 };
 
 

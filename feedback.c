@@ -19,15 +19,15 @@
 
 /****************  PRIVATE DATA (Progress state information)  ****************/
 
-static long long      total_size;
-static long long      completed_size;
-static long long      initial_offset;
-static int            delta_index;
-static int            delta_bytes[8];
-static int            delta_msecs[8];
-static char           bar[512];       /* A reasonable unreachable value */
-static struct timeval init_time;
-static struct timeval last_time;
+static long long       total_size;
+static long long       completed_size;
+static long long       initial_offset;
+static int             delta_index;
+static int             delta_bytes[8];
+static int             delta_msecs[8];
+static char            bar[512];       /* A reasonable unreachable value */
+static struct timeval  init_time;
+static struct timeval  last_time;
 
 
 /****************************  PRIVATE FUNCTIONS  ****************************/
@@ -38,17 +38,16 @@ static struct timeval last_time;
  * Return the number of columns in the current terminal, so we can fit better
  * the progress bar. Code stolen from GNU Wget.
  */
-static int
-query_terminal_width (void)
+static int query_terminal_width (void)
 {
-        int w = BAR_DEFAULT_WIDTH;
+        int  w = BAR_DEFAULT_WIDTH;
 #ifdef HASEFROCH
         CONSOLE_SCREEN_BUFFER_INFO csbi;
 
         if (GetConsoleScreenBufferInfo(GetStdHandle(STD_ERROR_HANDLE), &csbi))
                 w = csbi.dwSize.X;
 #else
-        struct winsize wsz;
+        struct winsize  wsz;
 
         if (ioctl(fileno(stderr), TIOCGWINSZ, &wsz) != -1)
                 w = wsz.ws_col;
@@ -64,8 +63,8 @@ query_terminal_width (void)
  * and return the value as an integer number.  The value will bi positive if
  * t1 > t2, that is, t1 is later than t2.
  */
-static int
-timeval_diff_in_millis (const struct timeval *t1, const struct timeval *t2)
+static int timeval_diff_in_millis (const struct timeval *t1,
+                                   const struct timeval *t2)
 {
     return (t1->tv_sec - t2->tv_sec) * 1000
            + (t1->tv_usec - t2->tv_usec) / 1000;
@@ -80,10 +79,10 @@ timeval_diff_in_millis (const struct timeval *t1, const struct timeval *t2)
  * obtained from glib2/glib/gmain.c with a slight modification to avoid a
  * compilation warning.  The resulting assembler code is exactly the same.
  */
-static void
-gettimeofday (struct timeval *time, void *dummy)
+static void gettimeofday (struct timeval *time, void *dummy)
 {
-        union {
+        union
+        {
                 FILETIME as_ft;
                 uint64_t as_long;
         } ft;
@@ -103,12 +102,11 @@ gettimeofday (struct timeval *time, void *dummy)
  * Return a beautified string representation of an integer. String will contain
  * thousand separators.
  */
-static char *
-pretty_number (long long num)
+static char *pretty_number (long long num)
 {
-        static char str[16];
-        char        ugly[12];
-        int         i, j;
+        static char  str[16];
+        char         ugly[12];
+        int          i, j;
 
 #ifdef HASEFROCH
         i = snprintf(ugly, 12, "%I64d", num);
@@ -134,11 +132,10 @@ pretty_number (long long num)
  * Return a beautified string representation of an integer holding a time value,
  * in seconds. String format is "hour:min:sec".
  */
-static char *
-pretty_time (int secs)
+static char *pretty_time (int secs)
 {
-        static char str[12];
-        int         hour, min, sec;
+        static char  str[12];
+        int          hour, min, sec;
 
         min  = secs / 60;
         sec  = secs % 60;
@@ -162,24 +159,28 @@ pretty_time (int secs)
  * Scale and convert a given transfer rate to a beautified string. Metrics are
  * changed when value is scaled.
  */
-static char *
-pretty_speed (float rate)
+static char *pretty_speed (float rate)
 {
-        static char str[16];
-        char       *metric;
+        static char  str[16];
+        char        *metric;
 
-        if (rate > 1024.0 * 1024.0 * 1024.0) {
+        if (rate > 1024.0 * 1024.0 * 1024.0)
+        {
                 rate  /= 1024.0 * 1024.0 * 1024.0;
                 metric = "G/s";
-        } else if (rate > 1024.0 * 1024.0) {
+        }
+        else if (rate > 1024.0 * 1024.0)
+        {
                 rate  /= 1024.0 * 1024.0;
                 metric = "M/s";
-        } else if (rate > 1024.0) {
+        }
+        else if (rate > 1024.0)
+        {
                 rate  /= 1024.0;
                 metric = "K/s";
-        } else {
-                metric = "B/s";
         }
+        else
+                metric = "B/s";
 
         snprintf(str, 16, "%4.1f %s", rate, metric);
         return str;
@@ -207,25 +208,25 @@ pretty_speed (float rate)
  *      TOTAL           --> 40 chars + 7 spaces = 47
  *      (As defined by BAR_DATA_WIDTH)
  */
-static void
-draw_bar (void)
+static void draw_bar (void)
 {
-        int   eta, bar_size = query_terminal_width() - BAR_DATA_WIDTH;
-        int   bytes, msecs;
-        float percent, fill, speed;
-        float ofill; /* For initial offset */
+        int    eta, bar_size = query_terminal_width() - BAR_DATA_WIDTH;
+        int    bytes, msecs;
+        float  percent, fill, speed;
+        float  ofill; /* For initial offset */
 
         /* Some temporary calculations have to done in floating point
          * representation because of overflow issues */
-        percent = ((float)completed_size / (float)total_size) * 100.0;
-        fill    = ((float)bar_size * percent) / 100.0;
+        percent = ((float) completed_size / (float) total_size) * 100.0;
+        fill    = ((float) bar_size * percent) / 100.0;
 
         memset(bar, ' ', bar_size);
-        memset(bar, '=', (size_t)fill);
-        if (initial_offset > 0) {
-                ofill = ((float)initial_offset / (float)total_size)
-                        * (float)bar_size;
-                memset(bar, '+', (size_t)ofill);
+        memset(bar, '=', (size_t) fill);
+        if (initial_offset > 0)
+        {
+                ofill = ((float) initial_offset / (float) total_size)
+                        * (float) bar_size;
+                memset(bar, '+', (size_t) ofill);
         }
         bar[bar_size] = '\0';
 
@@ -238,11 +239,11 @@ draw_bar (void)
                 + delta_msecs[3] + delta_msecs[4] + delta_msecs[5]
                 + delta_msecs[6] + delta_msecs[7];
 
-        speed = (float)bytes / ((float)msecs * 1e-3);
-        eta   = (int) ((float)(total_size - completed_size) / speed);
+        speed = (float) bytes / ((float) msecs * 1e-3);
+        eta   = (int) ((float) (total_size - completed_size) / speed);
 
         /* Print all */
-        printf("\r%3d%% [%s] %-14s %10s ETA %-8s", (int)percent, bar,
+        printf("\r%3d%% [%s] %-14s %10s ETA %-8s", (int) percent, bar,
                pretty_number(completed_size), pretty_speed(speed),
                pretty_time(eta));
         fflush(stdout);
@@ -256,14 +257,14 @@ draw_bar (void)
  *
  * Prepare progress output for a single file.
  */
-void
-setup_progress (char *name, long long size, long long offset)
+void setup_progress (char *name, long long size, long long offset)
 {
-        int i;
+        int  i;
 
         /* Initialize the delta arrays before every single transfer */
         memset(delta_bytes, 0, sizeof(int) * 8);
-        for (i = 0; i < 8; i += 4) {
+        for (i = 0;  i < 8;  i += 4)
+        {
                 delta_msecs[i]     = 1;
                 delta_msecs[i + 1] = 1;
                 delta_msecs[i + 2] = 1;
@@ -290,11 +291,10 @@ setup_progress (char *name, long long size, long long offset)
  *
  * Update the history ring and show amount of transfer and percentage.
  */
-void
-update_progress (size_t increment)
+void update_progress (size_t increment)
 {
-        struct timeval now;
-        int            delay;
+        struct timeval  now;
+        int             delay;
 
         gettimeofday(&now, NULL);
         delay = timeval_diff_in_millis(&now, &last_time);
@@ -302,16 +302,17 @@ update_progress (size_t increment)
         delta_bytes[delta_index] += increment;
         completed_size           += increment;
 
-        if (delay > BAR_REFRESH_DELAY) {
-            delta_msecs[delta_index] = delay;
+        if (delay > BAR_REFRESH_DELAY)
+        {
+                delta_msecs[delta_index] = delay;
 
-            delta_index++;
-            delta_index &= 0x07;     /* delta_index %= 8; */
-            last_time    = now;
+                delta_index++;
+                delta_index &= 0x07;     /* delta_index %= 8; */
+                last_time    = now;
 
-            draw_bar();
+                draw_bar();
 
-            delta_bytes[delta_index] = 0;
+                delta_bytes[delta_index] = 0;
         }
 }
 
@@ -321,16 +322,15 @@ update_progress (size_t increment)
  *
  * Show the average transfer rate and other general information.
  */
-void
-finish_progress (void)
+void finish_progress (void)
 {
-        struct timeval now;
-        float          total_elapsed, av_rate;
+        struct timeval  now;
+        float           total_elapsed, av_rate;
 
         gettimeofday(&now, NULL);
 
-        total_elapsed = (float)timeval_diff_in_millis(&now, &init_time) * 1e-3;
-        av_rate       = (float)(total_size - initial_offset) / total_elapsed;
+        total_elapsed = (float) timeval_diff_in_millis(&now, &init_time) * 1e-3;
+        av_rate       = (float) (total_size - initial_offset) / total_elapsed;
 
         draw_bar();
         printf("\nCompleted %s bytes in %s (Average Rate: %s)\n\n",

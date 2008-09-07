@@ -19,13 +19,12 @@
  * and wait for someone to connect. Return the connected socket ready for
  * transmission.
  */
-SOCKET
-open_connection_server (unsigned short port)
+SOCKET open_connection_server (unsigned short port)
 {
-        SOCKET             bsk, sk; /* bsk --> Binding SocKet */
-        struct sockaddr_in saddr;
-        int                e;
-        socklen_t          alen;
+        SOCKET              bsk, sk; /* bsk --> Binding SocKet */
+        struct sockaddr_in  saddr;
+        int                 e;
+        socklen_t           alen;
 
         bsk = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
         if (bsk == INVALID_SOCKET)
@@ -39,7 +38,7 @@ open_connection_server (unsigned short port)
         e = 1;
         setsockopt(bsk, SOL_SOCKET, SO_REUSEADDR, CCP_CAST &e, sizeof(e));
 
-        e = bind(bsk, (SOCKADDR *)&saddr, sizeof(saddr));
+        e = bind(bsk, (SOCKADDR *) &saddr, sizeof(saddr));
         if (e == SOCKET_ERROR)
                 fatal("Could not open port %d", port);
 
@@ -48,7 +47,7 @@ open_connection_server (unsigned short port)
                 fatal("Could not listen on port %d", port);
 
         alen = (socklen_t)sizeof(saddr);
-        sk   = accept(bsk, (SOCKADDR *)&saddr, &alen);
+        sk   = accept(bsk, (SOCKADDR *) &saddr, &alen);
         if (sk == INVALID_SOCKET)
                 fatal("Could not accept client connection");
 
@@ -65,13 +64,12 @@ open_connection_server (unsigned short port)
  * (either a hostname or an IP address) and return the connected socket ready
  * for transmission.
  */
-SOCKET
-open_connection_client (char *host, unsigned short port)
+SOCKET open_connection_client (char *host, unsigned short port)
 {
-        SOCKET             sk;
-        struct sockaddr_in saddr;
-        struct hostent    *he;
-        int                e;
+        SOCKET              sk;
+        struct sockaddr_in  saddr;
+        struct hostent     *he;
+        int                 e;
 
         sk = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
         if (sk == INVALID_SOCKET)
@@ -80,10 +78,12 @@ open_connection_client (char *host, unsigned short port)
         saddr.sin_family      = AF_INET;
         saddr.sin_port        = htons(port);
         saddr.sin_addr.s_addr = inet_addr(host);
-        if (saddr.sin_addr.s_addr == INADDR_NONE) {
+        if (saddr.sin_addr.s_addr == INADDR_NONE)
+        {
                 /* Invalid IP, maybe we have to do a DNS query */
                 he = gethostbyname(host);
-                if (he == NULL) {
+                if (he == NULL)
+                {
 #if defined(HASEFROCH) || defined(OMIT_HERROR)
                         fatal("Invalid IP or hostname");
 #else
@@ -91,11 +91,11 @@ open_connection_client (char *host, unsigned short port)
                         exit(EXIT_FAILURE);
 #endif
                 }
-                saddr.sin_addr.s_addr = ((struct in_addr *)he->h_addr)->s_addr;
+                saddr.sin_addr.s_addr = ((struct in_addr *) he->h_addr)->s_addr;
         }
 
         /* Now we have a destination host */
-        e = connect(sk, (SOCKADDR *)&saddr, sizeof(saddr));
+        e = connect(sk, (SOCKADDR *) &saddr, sizeof(saddr));
         if (e == SOCKET_ERROR)
                 fatal("Connecting to host '%s'", host);
 
@@ -109,10 +109,9 @@ open_connection_client (char *host, unsigned short port)
  * Send count bytes over the connection. Doesn't finish until all of them are
  * sent. On error aborts.
  */
-void
-send_data (SOCKET sk, char *buf, size_t count)
+void send_data (SOCKET sk, char *buf, size_t count)
 {
-        int s; /* Sent bytes in one send() call */
+        int  s; /* Sent bytes in one send() call */
 
         do {
                 s = send(sk, buf, count, 0);
@@ -130,10 +129,9 @@ send_data (SOCKET sk, char *buf, size_t count)
  * Receive count bytes from the connection. Doesn't finish until all bytes are
  * received. On error aborts.
  */
-void
-receive_data (SOCKET sk, char *buf, size_t count)
+void receive_data (SOCKET sk, char *buf, size_t count)
 {
-        int r; /* Received bytes in one recv() call */
+        int  r; /* Received bytes in one recv() call */
 
         do {
                 r = recv(sk, buf, count, MSG_WAITALL);
@@ -151,11 +149,10 @@ receive_data (SOCKET sk, char *buf, size_t count)
  * Build a header packet and send it through the connection. All the fields are
  * converted to network byte order if required.
  */
-void
-send_message (SOCKET sk, int type, long long size, char *name)
+void send_message (SOCKET sk, int type, long long size, char *name)
 {
-        int           blocks, extra;
-        struct header packet;
+        int            blocks, extra;
+        struct header  packet;
 
         blocks = (int) (size >> CANUTE_BLOCK_BITS);
         extra  = (int) (size & CANUTE_BLOCK_MASK);
@@ -164,14 +161,15 @@ send_message (SOCKET sk, int type, long long size, char *name)
         packet.blocks = htonl(blocks); /* Read protocol.c for an explanation */
         packet.extra  = htonl(extra);
 
-        if (name != NULL) {
+        if (name != NULL)
+        {
                 strncpy(packet.name, name, CANUTE_NAME_LENGTH);
                 packet.name[CANUTE_NAME_LENGTH] = '\0';
-        } else {
-                packet.name[0] = '\0';
         }
+        else
+                packet.name[0] = '\0';
 
-        send_data(sk, (char *)&packet, sizeof(struct header));
+        send_data(sk, (char *) &packet, sizeof(struct header));
 }
 
 
@@ -185,19 +183,21 @@ send_message (SOCKET sk, int type, long long size, char *name)
 int
 receive_message (SOCKET sk, long long *size, char *name)
 {
-        int           type, blocks, extra;
-        struct header packet;
+        int            type, blocks, extra;
+        struct header  packet;
 
-        receive_data(sk, (char *)&packet, sizeof(struct header));
+        receive_data(sk, (char *) &packet, sizeof(struct header));
 
-        if (size != NULL) {
+        if (size != NULL)
+        {
                 /* Read protocol.c for an explanation */
                 blocks = ntohl(packet.blocks);
                 extra  = ntohl(packet.extra);
-                *size  = ((long long)blocks << 16) + extra;
+                *size  = ((long long) blocks << 16) + extra;
         }
 
-        if (name != NULL) {
+        if (name != NULL)
+        {
                 strncpy(name, packet.name, CANUTE_NAME_LENGTH);
                 name[CANUTE_NAME_LENGTH] = '\0';
         }
