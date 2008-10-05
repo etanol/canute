@@ -10,21 +10,21 @@
 /******************************************************************************/
 
 /* Constants */
-#define CANUTE_VERSION_STR  "v1.1"
-#define CANUTE_DEFAULT_PORT 1121
-#define CANUTE_NAME_LENGTH  239  /* Don't touch this */
-#define CANUTE_BLOCK_BITS   16
-#define CANUTE_BLOCK_SIZE   (1 << CANUTE_BLOCK_BITS)
-#define CANUTE_BLOCK_MASK   (CANUTE_BLOCK_SIZE - 1)
-#define REQUEST_FILE        1
-#define REQUEST_BEGINDIR    2
-#define REQUEST_ENDDIR      3
-#define REQUEST_END         4
-#define REPLY_ACCEPT        5
-#define REPLY_SKIP          6
+#define CANUTE_VERSION_STR   "v1.1"
+#define CANUTE_DEFAULT_PORT  1121
+#define CANUTE_NAME_LENGTH   239  /* Don't touch this */
+#define CANUTE_BLOCK_BITS    16
+#define CANUTE_BLOCK_SIZE    (1 << CANUTE_BLOCK_BITS)
+#define CANUTE_BLOCK_MASK    (CANUTE_BLOCK_SIZE - 1)
+#define REQUEST_FILE         1
+#define REQUEST_BEGINDIR     2
+#define REQUEST_ENDDIR       3
+#define REQUEST_END          4
+#define REPLY_ACCEPT         5
+#define REPLY_SKIP           6
 
 /* Large File Support */
-#define _FILE_OFFSET_BITS   64
+#define _FILE_OFFSET_BITS    64
 #define _LARGEFILE_SOURCE
 #define _LARGEFILE64_SOURCE
 

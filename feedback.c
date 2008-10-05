@@ -81,10 +81,9 @@ static int timeval_diff_in_millis (const struct timeval *t1,
  */
 static void gettimeofday (struct timeval *time, void *dummy)
 {
-        union
-        {
-                FILETIME as_ft;
-                uint64_t as_long;
+        union {
+                FILETIME  as_ft;
+                uint64_t  as_long;
         } ft;
 
         GetSystemTimeAsFileTime(&ft.as_ft);

@@ -180,8 +180,7 @@ void send_message (SOCKET sk, int type, long long size, char *name)
  * necessary, fill the fields (if address was provided by the caller) and return
  * the message type.
  */
-int
-receive_message (SOCKET sk, long long *size, char *name)
+int receive_message (SOCKET sk, long long *size, char *name)
 {
         int            type, blocks, extra;
         struct header  packet;

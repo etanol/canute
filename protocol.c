@@ -271,7 +271,8 @@ int receive_item (SOCKET sk)
 
         request = receive_message(sk, &size, namebuf);
 
-        switch (request) {
+        switch (request)
+        {
         case REQUEST_FILE:
                 receive_file(sk, namebuf, size);
                 break;
@@ -279,10 +280,13 @@ int receive_item (SOCKET sk)
         case REQUEST_BEGINDIR:
                 mkdir(namebuf);
                 e = chdir(namebuf);
-                if (e == -1) {
+                if (e == -1)
+                {
                         error("Cannot change to dir '%s'", namebuf);
                         send_message(sk, REPLY_SKIP, 0, NULL);
-                } else {
+                }
+                else
+                {
                         printf(">>> Entering directory '%s'\n",  namebuf);
                         send_message(sk, REPLY_ACCEPT, 0, NULL);
                 }
