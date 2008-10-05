@@ -8,8 +8,11 @@ TABLE OF CONTENTS
                 3.2 OSF1
                 3.3 HP-UX
                 3.4 Hasefroch
-        4. Source code files
-        5. Credits
+        4. Protocol enhancements
+                4.1 File modification time
+                4.2 Executable bit
+        5. Source code files
+        6. Credits
 
 
 
@@ -192,7 +195,53 @@ and compile as you like.  The Makefile is very straightforward.
 
 
 
-4. SOURCE CODE FILES
+4. PROTOCOL ENHANCEMENTS
+========================
+
+Version 1.2 introduces some improvements on the protocol.  The previously
+reserved field in the header packet now carries some additional information
+about the file being transferred.
+
+To maintain backwards compatibility with versions 1.0 and 1.1, the last
+byte of each header packet is marked with a special value.  Old versions
+will ignore that mark and the new information introduced into the header
+packet.
+
+
+4.1. FILE MODIFICATION TIME
+---------------------------
+
+Size information has proven to be a excessively rudimentary mechanism to
+enable resume behaviour.  A better approach used by other software (such as
+rsync) is to compare file modification dates in order to decide if resume
+makes sense or not.
+
+Then, when file modification date of the incoming file is different from
+the existing one, the local file is truncated and transferred from the
+beginning.
+
+Remember that Canute is NOT a mirroring software.  Nevertheless, this
+feature helps to make Canute friendlier to such mirroring software.
+
+
+4.2. EXECUTABLE BIT
+-------------------
+
+The Canute experience has shown that in many cases, the lack of executable
+bit information introduces some inconveniences.  This is particularly
+annoying on large directory tree transfers.  Therefore, this information is
+now sent through the connection.
+
+The executable bit is also kind of "resumed" because it propagates.  But
+the lack of it does NOT propagate.  That means once the executable bit is
+set locally, subsequent resumes will not clear it.
+
+Obviously, the use of executable bit is disabled in Hasefroch builds as it
+does not make sense.
+
+
+
+5. SOURCE CODE FILES
 ====================
 
 canute.h  : Dirty tricks to make the rest of the code portable and as
@@ -203,8 +252,8 @@ canute.c  : Main function.  Command line parsing and role selection
 
 feedback.c: User feedback module, progress bar, information and timing.
 
-net.c     : Basic network management functions.  Connection handling and
-            block transfer.
+net.c     : Basic network management functions.  Connection handling, block
+            transfer and message passing.
 
 protocol.c: Sender-receiver negotiations and content transfers.
 
@@ -212,7 +261,7 @@ util.c    : Unclassified utility functions.
 
 
 
-5. CREDITS
+6. CREDITS
 ==========
 
                *** Original idea and current maintenance ***
