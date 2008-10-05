@@ -56,12 +56,9 @@ endif
 
 # Repository maintainer targets (not listed in help)
 dist:
-	@hg archive /tmp/canute; \
-	cd /tmp; \
-	rm canute/.hg_archival.txt; \
-	zip -r9m canute.zip canute; \
-	cd -;\
-	mv /tmp/canute.zip .
+	@v=`hg id -t | head -1` ; \
+	{ test -z "$$v" || test "$$v" = 'tip' ; } && v=`hg id -i | head -1` ; \
+	hg archive -t tgz -X .hg_archival.txt -X .hgtags canute-$$v.tar.gz
 
 # Cleaning and help
 clean:
