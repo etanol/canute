@@ -102,7 +102,7 @@ int main (int argc, char **argv)
                 }
 
                 /* It's over. Notify the receiver to finish as well, please */
-                send_message(sk, REQUEST_END, 0, NULL);
+                send_message(sk, REQUEST_END, 0, 0, 0, NULL);
         }
         else if (strncmp(argv[1], "get", 3) == 0)
         {

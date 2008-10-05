@@ -74,41 +74,53 @@ static char databuf[CANUTE_BLOCK_SIZE];
 /*
  * receive_file
  *
- * A file request has been received from the network. We must reply depending on
- * the local state of the file requested.
+ * A file request has been received from the network.  We must reply depending
+ * on the local state of the file requested.
  *
- * TODO: Skip policy could be refined.
+ * Having mtime > 0 means that the peer is version above 1.1, so we can set the
+ * file mtime to that provided by the protocol.
  */
-static void receive_file (SOCKET sk, char *name, long long size)
+static void receive_file (SOCKET     sk,
+                          char      *name,
+                          long long  size,
+                          int        mtime,
+                          int        is_executable)
 {
-        int               e;
-        FILE             *file;
-        long long         received_bytes; /* Think about it also as "offset" */
-        size_t            b;
-        struct stat_info  st;
+        int                e;
+        FILE              *file;
+        long long          received_bytes; /* Think about it also as "offset" */
+        size_t             b;
+        struct stat_info   st;
+        struct utime_info  ut;
 
         e = stat(name, &st);
-        if (e == -1)
-                /* Most probable: errno == ENOENT */
+        if (e == -1 || (mtime > 0 && mtime != (int) st.st_mtime))
+        {
+                /*
+                 * If file does not exist, create it.  But if file exists and
+                 * has a different time (in case the peer provides such
+                 * information), we must truncate and start all over again.
+                 */
                 received_bytes = 0;
+        }
         else if (st.st_size >= size)
         {
                 printf("--- Skipping file '%s'\n", name);
-                send_message(sk, REPLY_SKIP, 0, NULL);
+                send_message(sk, REPLY_SKIP, 0, 0, 0, NULL);
                 return;
         }
         else
                 received_bytes = (long long) st.st_size;
 
-        file = fopen(name, "ab");
+        file = fopen(name, (received_bytes > 0 ? "ab" : "wb"));
         if (file == NULL)
         {
                 error("Cannot open file '%s'", name);
-                send_message(sk, REPLY_SKIP, 0, NULL);
+                send_message(sk, REPLY_SKIP, 0, 0, 0, NULL);
                 return;
         }
 
-        send_message(sk, REPLY_ACCEPT, received_bytes, NULL);
+        send_message(sk, REPLY_ACCEPT, 0, 0, received_bytes, NULL);
         setup_progress(name, size, received_bytes);
 
         while (received_bytes < size)
@@ -127,6 +139,31 @@ static void receive_file (SOCKET sk, char *name, long long size)
         finish_progress();
         fflush(file);
         fclose(file);
+
+        /* Set mtime if packet provides information */
+        if (mtime > 0)
+        {
+                ut.actime  = (time_t) mtime;
+                ut.modtime = (time_t) mtime;
+                e = utime(name, &ut);
+                if (e == -1)
+                        error("Cannot set modification time on '%s'", name);
+        }
+
+#ifndef HASEFROCH
+        if (is_executable)
+        {
+                e = stat(name, &st);
+                if (e != -1)
+                {
+                        e = chmod(name, st.st_mode | S_IXUSR);
+                        if (e == -1)
+                                error("Setting executable bit on '%s'", name);
+                }
+                else
+                        error("Cannot stat file '%s'", name);
+        }
+#endif
 }
 
 
@@ -135,8 +172,11 @@ static void receive_file (SOCKET sk, char *name, long long size)
  *
  * Treat the item as a file and try to send it.
  */
-static void
-send_file (SOCKET sk, char *name, long long size)
+static void send_file (SOCKET     sk,
+                       char      *name,
+                       long long  size,
+                       int        mtime,
+                       int        is_executable)
 {
         int        e, reply;
         long long  sent_bytes; /* Size reported remotely */
@@ -152,8 +192,8 @@ send_file (SOCKET sk, char *name, long long size)
                 return;
         }
 
-        send_message(sk, REQUEST_FILE, size, bname);
-        reply = receive_message(sk, &sent_bytes, NULL);
+        send_message(sk, REQUEST_FILE, is_executable, mtime, size, bname);
+        reply = receive_message(sk, NULL, NULL, &sent_bytes, NULL);
         if (reply == REPLY_SKIP)
         {
                 fclose(file);
@@ -168,7 +208,7 @@ send_file (SOCKET sk, char *name, long long size)
                         fatal("Could not seek file '%s'", bname);
         }
 
-        setup_progress (bname, size, sent_bytes);
+        setup_progress(bname, size, sent_bytes);
 
         while (sent_bytes < size)
         {
@@ -193,7 +233,7 @@ send_file (SOCKET sk, char *name, long long size)
  */
 void send_item (SOCKET sk, char *name)
 {
-        int               e, reply;
+        int               e, reply, x_bit = 0;
         char             *bname;
         DIR              *dir;
         struct dirent    *dentry;
@@ -224,8 +264,8 @@ void send_item (SOCKET sk, char *name)
                         return;
                 }
 
-                send_message(sk, REQUEST_BEGINDIR, 0, bname);
-                reply = receive_message(sk, NULL, NULL);
+                send_message(sk, REQUEST_BEGINDIR, 0, 0, 0, bname);
+                reply = receive_message(sk, NULL, NULL, NULL, NULL);
                 if (reply == REPLY_SKIP)
                 {
                         closedir(dir);
@@ -249,10 +289,15 @@ void send_item (SOCKET sk, char *name)
                 e = chdir("..");
                 if (e == -1)
                         fatal("Could not change to parent directory");
-                send_message(sk, REQUEST_ENDDIR, 0, NULL);
+                send_message(sk, REQUEST_ENDDIR, 0, 0, 0, NULL);
         }
         else
-                send_file(sk, name, st.st_size);
+        {
+#ifndef HASEFROCH
+                x_bit = st.st_mode & S_IXUSR;
+#endif
+                send_file(sk, name, st.st_size, (int) st.st_mtime, x_bit);
+        }
 }
 
 
@@ -266,15 +311,15 @@ void send_item (SOCKET sk, char *name)
 int receive_item (SOCKET sk)
 {
         static char  namebuf[CANUTE_NAME_LENGTH];
-        int          e, request;
+        int          e, x_bit, mtime, request;
         long long    size;
 
-        request = receive_message(sk, &size, namebuf);
+        request = receive_message(sk, &x_bit, &mtime, &size, namebuf);
 
         switch (request)
         {
         case REQUEST_FILE:
-                receive_file(sk, namebuf, size);
+                receive_file(sk, namebuf, size, mtime, x_bit);
                 break;
 
         case REQUEST_BEGINDIR:
@@ -283,12 +328,12 @@ int receive_item (SOCKET sk)
                 if (e == -1)
                 {
                         error("Cannot change to dir '%s'", namebuf);
-                        send_message(sk, REPLY_SKIP, 0, NULL);
+                        send_message(sk, REPLY_SKIP, 0, 0, 0, NULL);
                 }
                 else
                 {
                         printf(">>> Entering directory '%s'\n",  namebuf);
-                        send_message(sk, REPLY_ACCEPT, 0, NULL);
+                        send_message(sk, REPLY_ACCEPT, 0, 0, 0, NULL);
                 }
                 break;
 

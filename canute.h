@@ -10,9 +10,10 @@
 /******************************************************************************/
 
 /* Constants */
-#define CANUTE_VERSION_STR   "v1.1"
+#define CANUTE_VERSION_STR   "v1.199"
 #define CANUTE_DEFAULT_PORT  1121
 #define CANUTE_NAME_LENGTH   239  /* Don't touch this */
+#define CANUTE_ENHANCED      22   /* Enhanced packet marker [ASCII SYN (0x16)]*/
 #define CANUTE_BLOCK_BITS    16
 #define CANUTE_BLOCK_SIZE    (1 << CANUTE_BLOCK_BITS)
 #define CANUTE_BLOCK_MASK    (CANUTE_BLOCK_SIZE - 1)
@@ -41,6 +42,7 @@
 #if defined(__WIN32__) || defined(WIN32)
 
 /* Definitions and headers (Hasefroch) */
+#include <sys/utime.h>
 #include <stdint.h>
 #include <windows.h>
 #include <winsock.h>
@@ -48,8 +50,10 @@
 #define  MSG_WAITALL 0    /* Hasefroch sucks and does not define this */
 #define  CCP_CAST (const char *)
 #define  IS_PATH_SEPARATOR(x) ((x) == '\\' || (x) == '/')
-#define  stat_info __stat64
-#define  stat(path, buf) _stat64((path), (buf))
+#define  stat_info   __stat64
+#define  utime_info  _utimbuf
+#define  stat(path, buf)   _stat64((path), (buf))
+#define  utime(path, buf)  _utime((path), (buf))
 typedef int socklen_t;
 extern int _stat64 (const char *path, struct __stat64 *buffer);
 extern int fseeko  (FILE *stream, off_t offset, int whence);
@@ -65,6 +69,7 @@ extern int fseeko  (FILE *stream, off_t offset, int whence);
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <unistd.h>
+#include <utime.h>
 #include <termios.h>
 #include <time.h>
 #define  INVALID_SOCKET -1
@@ -74,7 +79,8 @@ extern int fseeko  (FILE *stream, off_t offset, int whence);
 #define  IS_PATH_SEPARATOR(x) ((x) == '/')
 #define  closesocket(sk) close(sk)
 #define  mkdir(path) mkdir(path, 0755)
-#define  stat_info stat
+#define  stat_info   stat
+#define  utime_info  utimbuf
 typedef int SOCKET;
 
 #endif  /* WIN32 */
@@ -101,7 +107,7 @@ typedef int SOCKET;
 struct header
 {
         int   type;
-        int   reserved;
+        int   mtime;
         int   blocks;
         int   extra;
         char  name[CANUTE_NAME_LENGTH + 1];
@@ -120,8 +126,8 @@ SOCKET open_connection_server (unsigned short port);
 SOCKET open_connection_client (char *host, unsigned short port);
 void   send_data              (SOCKET sk, char *buf, size_t count);
 void   receive_data           (SOCKET sk, char *buf, size_t count);
-void   send_message           (SOCKET sk, int type, long long size, char *name);
-int    receive_message        (SOCKET sk, long long *size, char *name);
+void   send_message           (SOCKET sk, int type, int is_executable, int mtime, long long size, char *name);
+int    receive_message        (SOCKET sk, int *is_executable, int *mtime, long long *size, char *name);
 
 /* protocol.c */
 void send_item    (SOCKET sk, char *name);

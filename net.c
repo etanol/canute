@@ -149,26 +149,36 @@ void receive_data (SOCKET sk, char *buf, size_t count)
  * Build a header packet and send it through the connection. All the fields are
  * converted to network byte order if required.
  */
-void send_message (SOCKET sk, int type, long long size, char *name)
+void send_message (SOCKET     sk,
+                   int        type,
+                   int        is_executable,
+                   int        mtime,
+                   long long  size,
+                   char      *name)
 {
         int            blocks, extra;
         struct header  packet;
 
         blocks = (int) (size >> CANUTE_BLOCK_BITS);
-        extra  = (int) (size & CANUTE_BLOCK_MASK);
+        extra  = (int) (size &  CANUTE_BLOCK_MASK);
+
+        /* Encode executable bit on the mtime filed;  never mind compatibility
+         * because the remote side will ignore the mtime field */
+        if (is_executable)
+                mtime = -mtime;
 
         packet.type   = htonl(type);
-        packet.blocks = htonl(blocks); /* Read protocol.c for an explanation */
+        packet.mtime  = htonl(mtime);
+        packet.blocks = htonl(blocks);  /* Read protocol.c for an explanation */
         packet.extra  = htonl(extra);
 
         if (name != NULL)
-        {
                 strncpy(packet.name, name, CANUTE_NAME_LENGTH);
-                packet.name[CANUTE_NAME_LENGTH] = '\0';
-        }
         else
                 packet.name[0] = '\0';
 
+        /* Mark the packet as enhanced version and send it */
+        packet.name[CANUTE_NAME_LENGTH] = CANUTE_ENHANCED;
         send_data(sk, (char *) &packet, sizeof(struct header));
 }
 
@@ -180,12 +190,33 @@ void send_message (SOCKET sk, int type, long long size, char *name)
  * necessary, fill the fields (if address was provided by the caller) and return
  * the message type.
  */
-int receive_message (SOCKET sk, long long *size, char *name)
+int receive_message (SOCKET      sk,
+                     int        *is_executable,
+                     int        *mtime,
+                     long long  *size,
+                     char       *name)
 {
-        int            type, blocks, extra;
+        int            blocks, extra, pmtime = 0, is_x = 0;
         struct header  packet;
 
         receive_data(sk, (char *) &packet, sizeof(struct header));
+
+        if (packet.name[CANUTE_NAME_LENGTH] == CANUTE_ENHANCED)
+        {
+                /* Decode executable bit from the mtime field */
+                pmtime = ntohl(packet.mtime);
+                if (pmtime < 0)
+                {
+                        is_x   = !is_x;
+                        pmtime = -pmtime;
+                }
+        }
+
+        if (is_executable != NULL)
+                *is_executable = is_x;
+
+        if (mtime != NULL)
+                *mtime = pmtime;
 
         if (size != NULL)
         {
@@ -201,7 +232,6 @@ int receive_message (SOCKET sk, long long *size, char *name)
                 name[CANUTE_NAME_LENGTH] = '\0';
         }
 
-        type = ntohl(packet.type);
-        return type;
+        return ntohl(packet.type);
 }
 
