@@ -41,6 +41,7 @@
 #if defined(__WIN32__) || defined(WIN32)
 
 /* Definitions and headers (Hasefroch) */
+#include <stdint.h>
 #include <windows.h>
 #include <winsock.h>
 #define  HASEFROCH
