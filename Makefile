@@ -9,11 +9,21 @@
 #                                                                              #
 ################################################################################
 
-CC       ?= gcc
+UNAME := $(shell uname)
+
+CC       := gcc
 HCC      := i586-mingw32msvc-gcc
-CFLAGS   ?= -O2 -Wall -fomit-frame-pointer
-LDFLAGS  ?= -Wl,-s,-O1
-DBGFLAGS ?= -Wall -O0 -g -pg -DDEBUG
+CFLAGS   := -O3 -Wall -fomit-frame-pointer
+LDFLAGS  := -Wl,-s
+DBGFLAGS := -Wall -O0 -g -pg -DDEBUG
+
+ifeq ($(UNAME),SunOS)
+	CC       := cc
+	CFLAGS   := -DOMIT_HERROR -xO3
+	LDFLAGS  := -s
+	DBGFLAGS := -DOMIT_HERROR -DDEBUG -xO0 -g
+	LIBS     := -lsocket -lnsl
+endif
 
 Header      := canute.h
 Sources     := canute.c feedback.c net.c protocol.c util.c
@@ -30,7 +40,7 @@ debug: canute.dbg
 
 # Binaries
 canute: $(Objects)
-	@echo ' Linking           $@' && $(CC) $(LDFLAGS) -o $@ $^
+	@echo ' Linking           $@' && $(CC) $(LDFLAGS) -o $@ $^ $(LIBS)
 
 canute.exe: $(HaseObjects)
 	@echo ' Linking   [win32] $@' && \
@@ -38,7 +48,7 @@ canute.exe: $(HaseObjects)
 
 canute.dbg: $(Sources) $(Header)
 	@echo ' Building  [debug] $@' && \
-	$(CC) $(DBGFLAGS) -o $@ $(filter %.c, $^)
+	$(CC) $(DBGFLAGS) -o $@ $(filter %.c, $^) $(LIBS)
 
 # Pattern rules
 %.o: %.c $(Header)
