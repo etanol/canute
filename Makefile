@@ -25,6 +25,13 @@ ifeq ($(UNAME),SunOS)
 	LIBS     := -lsocket -lnsl
 endif
 
+ifeq ($(UNAME),HP-UX)
+	CC       := cc
+	CFLAGS   := -D_XOPEN_SOURCE_EXTENDED +DAportable +O3
+	LDFLAGS  := -s
+	DBGFLAGS := -DDEBUG +O0 -g
+endif
+
 Header      := canute.h
 Sources     := canute.c feedback.c net.c protocol.c util.c
 Objects     := $(Sources:.c=.o)
