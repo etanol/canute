@@ -47,7 +47,6 @@
 #include <windows.h>
 #include <winsock.h>
 #define  HASEFROCH
-#define  MSG_WAITALL 0    /* Hasefroch sucks and does not define this */
 #define  CCP_CAST (const char *)
 #define  IS_PATH_SEPARATOR(x) ((x) == '\\' || (x) == '/')
 #define  stat_info   __stat64

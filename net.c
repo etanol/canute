@@ -134,7 +134,7 @@ void receive_data (SOCKET sk, char *buf, size_t count)
         int  r; /* Received bytes in one recv() call */
 
         do {
-                r = recv(sk, buf, count, MSG_WAITALL);
+                r = recv(sk, buf, count, 0);
                 if (r == SOCKET_ERROR)
                         fatal("Receiving data");
                 count -= r;
