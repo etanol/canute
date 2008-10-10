@@ -207,8 +207,11 @@ byte of each header packet is marked with a special value.  Old versions
 will ignore that mark and the new information introduced into the header
 packet.
 
+So if one of the peers is using a version below 1.2, do not expect these
+added features to work.
 
-4.1. FILE MODIFICATION TIME
+
+4.1. File modification time
 ---------------------------
 
 Size information has proven to be a excessively rudimentary mechanism to
@@ -224,7 +227,7 @@ Remember that Canute is NOT a mirroring software.  Nevertheless, this
 feature helps to make Canute friendlier to such mirroring software.
 
 
-4.2. EXECUTABLE BIT
+4.2. Executable bit
 -------------------
 
 The Canute experience has shown that in many cases, the lack of executable
