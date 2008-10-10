@@ -4,10 +4,7 @@ TABLE OF CONTENTS
         1. About Canute
         2. Usage
         3. Compilation
-                3.1 Solaris
-                3.2 OSF1
-                3.3 HP-UX
-                3.4 Hasefroch
+                3.1 Hasefroch
         4. Protocol enhancements
                 4.1 File modification time
                 4.2 Executable bit
@@ -113,79 +110,24 @@ any special tricks.  Execute "make help" to find out what you need.
 
 Commercial UNIX variants do not offer a GNU environment, mainly because
 they have their proprietary C compiler, therefore compiler flags must be
-modified.  The Makefile has been written to allow these kind of changes
-directly from the command line.  Thus no code has to be modified.
+modified.  However, some commercial UNIX flavours are supported as long as
+GNU Make is installed.
 
-Thanks to the Department of Computer Architecture at the Universidad
-Politècnica de Catalunya (http://www.ac.upc.edu), a couple of different
-flavours have been tested.  Obviously, if you have GCC as your default
-compiler in one of these Unices, you do not need to follow the next
-instructions.
-
-
-3.1 Solaris (SunOS 5.x)
------------------------
-
-There are two issues to treat when dealing with networked applications.
-First, there is no herror() function available (used to display DNS
-errors).  And second, and most important, you need to link your binary
-against libsocket and libnsl.  In order to solve the fist problem, there is
-a slight modification of a conditional preprocessor directive (net.c, line
-87) to automatically replace the herror() call.  To compile successfully
-do:
-
-gmake 'CFLAGS=-DOMIT_HERROR' 'LDFLAGS=-s -lsocket -lnsl'
+In particular, to compile Canute in Solaris (SunOS 5.x) and in HP-UX, it is
+enough to run "gmake".  Note that OSF1 (5.1 and above) testing has been
+dropped because we do not have access to any such platform anymore.  Other
+flavours (like AIX) may need additional tuning.  Porting patches are
+welcomed.
 
 
-3.2 OSF1 from 5.1 (DEC/Alpha)
------------------------------
-
-Previous versions of OSF1 (i.e. 4.0) do not support snprintf() nor
-vsnprintf(); we were too lazy to implement replacement for them, therefore
-we decided not to give support.
-
-Even with version 5.1 the compilation gets a bit complicated.  You have to
-compile in two passes, first execute this:
-
-gmake 'CFLAGS='
-
-Then it will compile until net.c, where you will see compilation errors.
-Do not worry, just run the command:
-
-gmake 'CFLAGS=-D_XOPEN_SOURCE=500' 'LDFLAGS=-Wl,-s'
-
-And you will have your brand new Canute binary.  Do not try to be smarter
-by compiling everything with "-D_XOPEN_SOURCE=500" because then feedback.c
-will fail.
-
-
-3.3 HP-UX
----------
-
-Here is even easier than in Solaris.  Just clear the compiler flags to have
-it working:
-
-gmake 'CFLAGS=' 'LDFLAGS=-s'
-
-In case you want to suppress those annoying warnings at net.c, use this:
-
-gmake 'CFLAGS=-D_XOPEN_SOURCE_EXTENDED' 'LDFLAGS=-s'
-
-If you compile in a PA 1.x system, the same binary will work in a PA 2.0
-system (or it seems, not tested yet).  You can make a "portable" binary
-across different PA-RISC ABI versions using a compiler flag:
-
-gmake 'CFLAGS=+DAportable -D_XOPEN_SOURCE_EXTENDED' 'LDFLAGS=-s'
-
-
-3.4 Hasefroch (aka: Win32)
--------------------------
+3.1 Hasefroch (aka: Win32)
+--------------------------
 
 As a Hasefroch average user, you are not expected to be interested in this
 part because we already provide a binary.  But if you would like to patch
-Canute yourself and produce binaries for Hasefroch you only need to know
-one thing: cross-compile it.  Install MinGW (crossed) from your package
-manager and execute:
+Canute yourself and produce binaries for Hasefroch you can easily do so
+from UNIX by doing cross compilation.  Install MinGW (crossed) from your
+package manager and execute:
 
 make hase
 
@@ -269,7 +211,7 @@ util.c    : Unclassified utility functions.
 
                *** Original idea and current maintenance ***
                                   C2H5OH
-                       http://etanol.doesntexist.org
+                           http://www.krenel.net
 
 
                    *** Patch contributions and ideas ***
@@ -278,8 +220,10 @@ util.c    : Unclassified utility functions.
 
 
                             *** Testing aid ***
-                                Tito Houzy
                                     MKD
+                                Tito Houzy
+                                  m3gumi
+                                   bl4d3
 
 
                         *** Initial win32 port ***
