@@ -32,6 +32,7 @@ ifeq ($(UNAME),HP-UX)
 	DBGFLAGS := -DDEBUG +O0 -g
 endif
 
+# OSF1 support didn't make it to 1.2.  Dropped until resources available
 ifeq ($(UNAME),OSF1)
 	CC       := cc
 	CFLAGS   :=
