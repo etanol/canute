@@ -32,6 +32,13 @@ ifeq ($(UNAME),HP-UX)
 	DBGFLAGS := -DDEBUG +O0 -g
 endif
 
+ifeq ($(UNAME),OSF1)
+	CC       := cc
+	CFLAGS   :=
+	LDFLAGS  :=
+	DBGFLAGS := -DDEBUG -g
+endif
+
 Header      := canute.h
 Sources     := canute.c feedback.c net.c protocol.c util.c
 Objects     := $(Sources:.c=.o)
