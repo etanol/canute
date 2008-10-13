@@ -27,7 +27,7 @@ endif
 
 ifeq ($(UNAME),HP-UX)
 	CC       := cc
-	CFLAGS   := -D_XOPEN_SOURCE_EXTENDED +DAportable +O3
+	CFLAGS   := -D_XOPEN_SOURCE_EXTENDED +O3 #+DAportable
 	LDFLAGS  := -s
 	DBGFLAGS := -DDEBUG +O0 -g
 endif
