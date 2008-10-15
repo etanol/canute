@@ -81,8 +81,14 @@ endif
 
 # Repository maintainer targets (not listed in help)
 dist:
-	@v=`hg id -t | head -1` ; \
-	{ test -z "$$v" || test "$$v" = 'tip' ; } && v=`hg id -i | head -1` ; \
+	@v=`hg id -t | head -1`                                            ; \
+	if [ -z "$$v" ] || [ "$$v" = 'tip' ]                               ; \
+	then                                                                 \
+	        t=`hg tags | sed -n -e '2 s/ .*$$// p'`                    ; \
+	        rb=`hg id -nr $$t`                                         ; \
+	        rc=`hg id -n | sed -e 's/[^0-9][^0-9]*//g'`                ; \
+	        v="$$t+`expr $$rc - $$rb`"                                 ; \
+	fi                                                                 ; \
 	hg archive -t tgz -X .hg_archival.txt -X .hgtags canute-$$v.tar.gz
 
 # Cleaning and help
