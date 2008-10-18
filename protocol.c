@@ -94,15 +94,8 @@ static void receive_file (SOCKET     sk,
         struct utime_info  ut;
 
         e = stat(name, &st);
-        if (e == -1 || (mtime > 0 && mtime != (int) st.st_mtime))
-        {
-                /*
-                 * If file does not exist, create it.  But if file exists and
-                 * has a different time (in case the peer provides such
-                 * information), we must truncate and start all over again.
-                 */
-                received_bytes = 0;
-        }
+        if (e == -1)
+                received_bytes = 0;  /* Most probable: errno == ENOENT */
         else if (st.st_size >= size)
         {
                 printf("--- Skipping file '%s'\n", name);
