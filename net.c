@@ -46,7 +46,7 @@ SOCKET open_connection_server (unsigned short port)
         if (e == SOCKET_ERROR)
                 fatal("Could not listen on port %d", port);
 
-        alen = (socklen_t)sizeof(saddr);
+        alen = sizeof(saddr);
         sk   = accept(bsk, (SOCKADDR *) &saddr, &alen);
         if (sk == INVALID_SOCKET)
                 fatal("Could not accept client connection");
