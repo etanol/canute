@@ -10,7 +10,7 @@
 /******************************************************************************/
 
 /* Constants */
-#define CANUTE_VERSION_STR   "v1.199"
+#define CANUTE_VERSION_STR   "v1.2"
 #define CANUTE_DEFAULT_PORT  1121
 #define CANUTE_NAME_LENGTH   239  /* Don't touch this */
 #define CANUTE_ENHANCED      43   /* Enhanced packet marker [plus sign '+'] */
