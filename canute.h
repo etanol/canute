@@ -13,7 +13,7 @@
 #define CANUTE_VERSION_STR   "v1.199"
 #define CANUTE_DEFAULT_PORT  1121
 #define CANUTE_NAME_LENGTH   239  /* Don't touch this */
-#define CANUTE_ENHANCED      22   /* Enhanced packet marker [ASCII SYN (0x16)]*/
+#define CANUTE_ENHANCED      43   /* Enhanced packet marker [plus sign '+'] */
 #define CANUTE_BLOCK_BITS    16
 #define CANUTE_BLOCK_SIZE    (1 << CANUTE_BLOCK_BITS)
 #define CANUTE_BLOCK_MASK    (CANUTE_BLOCK_SIZE - 1)
