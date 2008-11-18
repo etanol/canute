@@ -1,3 +1,15 @@
+2008-11-18  etanol  <diptongo@gmail.com>
+
+	* Canute v1.2
+
+	- Improved protocol, now propagating file modification time and executable
+	bit information while maintaining backwards compatibility with older
+	versions.
+	- Makefile now detects the host platform and adjusts some
+	compilation flags accordingly, so it is no longer necessary to
+	perform tricks with non-gcc compilers.  Currently supported: Solaris
+	and HP-UX.
+
 2007-05-19  etanol  <diptongo@gmail.com>
 
 	* Canute v1.1
@@ -21,7 +33,7 @@
 	robustness.
 	- More UNIX flavours supported. Commercial ones tested are:
 	Solaris, OSF1 (5.1) and HP-UX.
-	- Source file splitted to improve code management and
+	- Split of the source file to improve code management and
 	readability.
 	- An informative README file added to the distribution.
 	- Code licensed under GPLv2.
@@ -44,8 +56,7 @@
 	- Stabilized speed and ETA values after some recoded parts in
 	order to find and resolve a stability bug found when
 	transmitting over slow connections.
-	- Cleaned some unneded conditional code (some #ifdef's
-	supressed).
+	- Cleaned some unneeded conditional code (some #ifdef's supressed).
 
 2006-06-27  mkd  <claudiomkd@gmail.com>
 
@@ -78,7 +89,7 @@
 	* Canute v0.2
 
 	- Improved feedback. Now we have a WGet style progress bar,
-	most of the code was stolen from there anyway. The transmision
+	most of the code was stolen from there anyway. The transmission
 	speed and estimated time needs some improvements, basically
 	stabilize the values.
 
