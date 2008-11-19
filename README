@@ -156,26 +156,27 @@ added features to work.
 4.1. File modification time
 ---------------------------
 
-Size information has proven to be a excessively rudimentary mechanism to
-enable resume behaviour.  A better approach used by other software (such as
-rsync) is to compare file modification dates in order to decide if resume
-makes sense or not.
+Most remote copying utilities provide a way to maintain, at least, file
+modification time intact.  In general it is desirable to preserve such
+information for many reasons; for example, to make a backup-like remote
+copy.
 
-Then, when file modification date of the incoming file is different from
-the existing one, the local file is truncated and transferred from the
-beginning.
+An attempt to use this information to decide upon resuming transfers showed
+that it is trickier than it seems at a first glance.  Therefore, the resume
+policy has not been altered.
 
-Remember that Canute is NOT a mirroring software.  Nevertheless, this
-feature helps to make Canute friendlier to such mirroring software.
+Remember, though, that Canute is NOT a mirroring nor backup software.
+Nevertheless, this feature helps to make Canute friendlier to such
+mirroring software.
 
 
 4.2. Executable bit
 -------------------
 
-The Canute experience has shown that in many cases, the lack of executable
-bit information introduces some inconveniences.  This is particularly
-annoying on large directory tree transfers.  Therefore, this information is
-now sent through the connection.
+The Canute experience has also shown that in many cases, the lack of
+executable bit information introduces some inconveniences.  This is
+particularly annoying on large directory tree transfers.  Therefore, this
+information is now sent through the connection.
 
 The executable bit is also kind of "resumed" because it propagates.  But
 the lack of it does NOT propagate.  That means once the executable bit is
