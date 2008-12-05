@@ -17,7 +17,7 @@ static char cwd_buf[PATH_MAX];
 
 /*
  * Four concepts are important here: server, client, sender and receiver. For
- * the sake of flexiblity wether the sender and receiver can be server or
+ * the sake of flexibility whether the sender and receiver can be server or
  * client.
  *
  * Server listens for connections and client needs to know the server host.
