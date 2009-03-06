@@ -21,10 +21,10 @@
  */
 SOCKET open_connection_server (unsigned short port)
 {
-        SOCKET              bsk, sk; /* bsk --> Binding SocKet */
-        struct sockaddr_in  saddr;
-        int                 e;
-        socklen_t           alen;
+        SOCKET             bsk, sk; /* bsk --> Binding SocKet */
+        struct sockaddr_in saddr;
+        int                e;
+        socklen_t          alen;
 
         bsk = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
         if (bsk == INVALID_SOCKET)
@@ -66,10 +66,10 @@ SOCKET open_connection_server (unsigned short port)
  */
 SOCKET open_connection_client (char *host, unsigned short port)
 {
-        SOCKET              sk;
-        struct sockaddr_in  saddr;
-        struct hostent     *he;
-        int                 e;
+        SOCKET             sk;
+        struct sockaddr_in saddr;
+        struct hostent    *he;
+        int                e;
 
         sk = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
         if (sk == INVALID_SOCKET)
@@ -111,7 +111,7 @@ SOCKET open_connection_client (char *host, unsigned short port)
  */
 void send_data (SOCKET sk, char *buf, size_t count)
 {
-        int  s; /* Sent bytes in one send() call */
+        int s; /* Sent bytes in one send() call */
 
         do {
                 s = send(sk, buf, count, 0);
@@ -131,7 +131,7 @@ void send_data (SOCKET sk, char *buf, size_t count)
  */
 void receive_data (SOCKET sk, char *buf, size_t count)
 {
-        int  r; /* Received bytes in one recv() call */
+        int r; /* Received bytes in one recv() call */
 
         do {
                 r = recv(sk, buf, count, 0);
@@ -149,15 +149,15 @@ void receive_data (SOCKET sk, char *buf, size_t count)
  * Build a header packet and send it through the connection. All the fields are
  * converted to network byte order if required.
  */
-void send_message (SOCKET     sk,
-                   int        type,
-                   int        is_executable,
-                   int        mtime,
-                   long long  size,
-                   char      *name)
+void send_message (SOCKET    sk,
+                   int       type,
+                   int       is_executable,
+                   int       mtime,
+                   long long size,
+                   char     *name)
 {
-        int            blocks, extra;
-        struct header  packet;
+        int           blocks, extra;
+        struct header packet;
 
         blocks = (int) (size >> CANUTE_BLOCK_BITS);
         extra  = (int) (size &  CANUTE_BLOCK_MASK);
@@ -190,14 +190,14 @@ void send_message (SOCKET     sk,
  * necessary, fill the fields (if address was provided by the caller) and return
  * the message type.
  */
-int receive_message (SOCKET      sk,
-                     int        *is_executable,
-                     int        *mtime,
-                     long long  *size,
-                     char       *name)
+int receive_message (SOCKET     sk,
+                     int       *is_executable,
+                     int       *mtime,
+                     long long *size,
+                     char      *name)
 {
-        int            blocks, extra, pmtime = 0, is_x = 0;
-        struct header  packet;
+        int           blocks, extra, pmtime = 0, is_x = 0;
+        struct header packet;
 
         receive_data(sk, (char *) &packet, sizeof(struct header));
 

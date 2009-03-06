@@ -28,12 +28,12 @@ static char cwd_buf[PATH_MAX];
  */
 int main (int argc, char **argv)
 {
-        SOCKET          sk = -1; /* Quest for a warning free compilation */
-        char           *port_str, *cwd;
-        unsigned short  port;
-        int             i, err, last, arg = 0;
+        SOCKET         sk = -1; /* Quest for a warning free compilation */
+        char          *port_str, *cwd;
+        unsigned short port;
+        int            i, err, last, arg = 0;
 #ifdef HASEFROCH
-        WSADATA  ws;
+        WSADATA ws;
 
         if (WSAStartup(MAKEWORD(1, 1), &ws))
                 fatal("Starting WinSock");

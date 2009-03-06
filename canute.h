@@ -105,11 +105,11 @@ typedef int SOCKET;
  */
 struct header
 {
-        int   type;
-        int   mtime;
-        int   blocks;
-        int   extra;
-        char  name[CANUTE_NAME_LENGTH + 1];
+        int  type;
+        int  mtime;
+        int  blocks;
+        int  extra;
+        char name[CANUTE_NAME_LENGTH + 1];
 };
 
 

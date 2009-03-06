@@ -20,7 +20,7 @@
  */
 char *basename (char *path)
 {
-        int  p = strlen(path) - 1;
+        int p = strlen(path) - 1;
 
         while (IS_PATH_SEPARATOR(path[p]))
         {
@@ -42,8 +42,8 @@ char *basename (char *path)
  */
 void error (char *msg, ...)
 {
-        va_list  pars;
-        char     s[128];
+        va_list pars;
+        char    s[128];
 
         fputs("ERROR: ", stderr);
         va_start(pars, msg);
@@ -60,8 +60,8 @@ void error (char *msg, ...)
  */
 void fatal (char *msg, ...)
 {
-        va_list  pars;
-        char     s[128];
+        va_list pars;
+        char    s[128];
 
         fputs("\nFATAL ERROR: ", stderr);
         va_start(pars, msg);
@@ -82,8 +82,8 @@ void fatal (char *msg, ...)
  */
 int fseeko (FILE *stream, off_t offset, int whence)
 {
-        int     e;
-        fpos_t  pos;
+        int    e;
+        fpos_t pos;
 
         if (whence != SEEK_SET)
                 return -1;

@@ -19,15 +19,15 @@
 
 /****************  PRIVATE DATA (Progress state information)  ****************/
 
-static long long       total_size;
-static long long       completed_size;
-static long long       initial_offset;
-static int             delta_index;
-static int             delta_bytes[8];
-static int             delta_msecs[8];
-static char            bar[512];       /* A reasonable unreachable value */
-static struct timeval  init_time;
-static struct timeval  last_time;
+static long long      total_size;
+static long long      completed_size;
+static long long      initial_offset;
+static int            delta_index;
+static int            delta_bytes[8];
+static int            delta_msecs[8];
+static char           bar[512];       /* A reasonable unreachable value */
+static struct timeval init_time;
+static struct timeval last_time;
 
 
 /****************************  PRIVATE FUNCTIONS  ****************************/
@@ -40,14 +40,14 @@ static struct timeval  last_time;
  */
 static int query_terminal_width (void)
 {
-        int  w = BAR_DEFAULT_WIDTH;
+        int w = BAR_DEFAULT_WIDTH;
 #ifdef HASEFROCH
         CONSOLE_SCREEN_BUFFER_INFO csbi;
 
         if (GetConsoleScreenBufferInfo(GetStdHandle(STD_ERROR_HANDLE), &csbi))
                 w = csbi.dwSize.X;
 #else
-        struct winsize  wsz;
+        struct winsize wsz;
 
         if (ioctl(fileno(stderr), TIOCGWINSZ, &wsz) != -1)
                 w = wsz.ws_col;
@@ -66,8 +66,8 @@ static int query_terminal_width (void)
 static int timeval_diff_in_millis (const struct timeval *t1,
                                    const struct timeval *t2)
 {
-    return (t1->tv_sec - t2->tv_sec) * 1000
-           + (t1->tv_usec - t2->tv_usec) / 1000;
+    return (t1->tv_sec  - t2->tv_sec)  * 1000 +
+           (t1->tv_usec - t2->tv_usec) / 1000;
 }
 
 
@@ -82,8 +82,8 @@ static int timeval_diff_in_millis (const struct timeval *t1,
 static void gettimeofday (struct timeval *time, void *dummy)
 {
         union {
-                FILETIME  as_ft;
-                uint64_t  as_long;
+                FILETIME as_ft;
+                uint64_t as_long;
         } ft;
 
         GetSystemTimeAsFileTime(&ft.as_ft);
@@ -103,9 +103,9 @@ static void gettimeofday (struct timeval *time, void *dummy)
  */
 static char *pretty_number (long long num)
 {
-        static char  str[16];
-        char         ugly[12];
-        int          i, j;
+        static char str[16];
+        char        ugly[12];
+        int         i, j;
 
 #ifdef HASEFROCH
         i = snprintf(ugly, 12, "%I64d", num);
@@ -133,8 +133,8 @@ static char *pretty_number (long long num)
  */
 static char *pretty_time (int secs)
 {
-        static char  str[12];
-        int          hour, min, sec;
+        static char str[12];
+        int         hour, min, sec;
 
         min  = secs / 60;
         sec  = secs % 60;
@@ -160,8 +160,8 @@ static char *pretty_time (int secs)
  */
 static char *pretty_speed (float rate)
 {
-        static char  str[16];
-        char        *metric;
+        static char str[16];
+        char       *metric;
 
         if (rate > 1024.0 * 1024.0 * 1024.0)
         {
@@ -209,10 +209,10 @@ static char *pretty_speed (float rate)
  */
 static void draw_bar (void)
 {
-        int    eta, bar_size = query_terminal_width() - BAR_DATA_WIDTH;
-        int    bytes, msecs;
-        float  percent, fill, speed;
-        float  ofill; /* For initial offset */
+        int   eta, bar_size = query_terminal_width() - BAR_DATA_WIDTH;
+        int   bytes, msecs;
+        float percent, fill, speed;
+        float ofill; /* For initial offset */
 
         /* Some temporary calculations have to done in floating point
          * representation because of overflow issues */
@@ -258,7 +258,7 @@ static void draw_bar (void)
  */
 void setup_progress (char *name, long long size, long long offset)
 {
-        int  i;
+        int i;
 
         /* Initialize the delta arrays before every single transfer */
         memset(delta_bytes, 0, sizeof(int) * 8);
@@ -292,8 +292,8 @@ void setup_progress (char *name, long long size, long long offset)
  */
 void update_progress (size_t increment)
 {
-        struct timeval  now;
-        int             delay;
+        struct timeval now;
+        int            delay;
 
         gettimeofday(&now, NULL);
         delay = timeval_diff_in_millis(&now, &last_time);
@@ -323,8 +323,8 @@ void update_progress (size_t increment)
  */
 void finish_progress (void)
 {
-        struct timeval  now;
-        float           total_elapsed, av_rate;
+        struct timeval now;
+        float          total_elapsed, av_rate;
 
         gettimeofday(&now, NULL);
 

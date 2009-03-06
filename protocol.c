@@ -80,18 +80,18 @@ static char databuf[CANUTE_BLOCK_SIZE];
  * Having mtime > 0 means that the peer is version above 1.1, so we can set the
  * file mtime to that provided by the protocol.
  */
-static void receive_file (SOCKET     sk,
-                          char      *name,
-                          long long  size,
-                          int        mtime,
-                          int        is_executable)
+static void receive_file (SOCKET    sk,
+                          char     *name,
+                          long long size,
+                          int       mtime,
+                          int       is_executable)
 {
-        int                e;
-        FILE              *file;
-        long long          received_bytes; /* Think about it also as "offset" */
-        size_t             b;
-        struct stat_info   st;
-        struct utime_info  ut;
+        int               e;
+        FILE             *file;
+        long long         received_bytes; /* Think about it also as "offset" */
+        size_t            b;
+        struct stat_info  st;
+        struct utime_info ut;
 
         e = stat(name, &st);
         if (e == -1)
@@ -165,17 +165,17 @@ static void receive_file (SOCKET     sk,
  *
  * Treat the item as a file and try to send it.
  */
-static void send_file (SOCKET     sk,
-                       char      *name,
-                       long long  size,
-                       int        mtime,
-                       int        is_executable)
+static void send_file (SOCKET    sk,
+                       char     *name,
+                       long long size,
+                       int       mtime,
+                       int       is_executable)
 {
-        int        e, reply;
-        long long  sent_bytes; /* Size reported remotely */
-        size_t     b;
-        char      *bname;
-        FILE      *file;
+        int       e, reply;
+        long long sent_bytes; /* Size reported remotely */
+        size_t    b;
+        char     *bname;
+        FILE     *file;
 
         bname = basename(name);
         file  = fopen(name, "rb");
@@ -226,11 +226,11 @@ static void send_file (SOCKET     sk,
  */
 void send_item (SOCKET sk, char *name)
 {
-        int               e, reply, x_bit = 0;
-        char             *bname;
-        DIR              *dir;
-        struct dirent    *dentry;
-        struct stat_info  st;
+        int              e, reply, x_bit = 0;
+        char            *bname;
+        DIR             *dir;
+        struct dirent   *dentry;
+        struct stat_info st;
 
         e = stat(name, &st);
         if (e == -1)
@@ -303,9 +303,9 @@ void send_item (SOCKET sk, char *name)
  */
 int receive_item (SOCKET sk)
 {
-        static char  namebuf[CANUTE_NAME_LENGTH];
-        int          e, x_bit, mtime, request;
-        long long    size;
+        static char namebuf[CANUTE_NAME_LENGTH];
+        int         e, x_bit, mtime, request;
+        long long   size;
 
         request = receive_message(sk, &x_bit, &mtime, &size, namebuf);
 
