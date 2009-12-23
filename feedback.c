@@ -275,8 +275,7 @@ void setup_progress (char *name, long long size, long long offset)
         initial_offset = offset;
         completed_size = offset;
 
-        printf("*** Transferring '%s' (%s bytes):\n", name,
-               pretty_number(size));
+        printf("*** Transferring '%s' (%s bytes)\n", name, pretty_number(size));
 
         /* We watch the clock before and after the whole transfer to estimate an
          * average speed to be shown at the end. */
@@ -325,6 +324,12 @@ void finish_progress (void)
 {
         struct timeval now;
         float          total_elapsed, av_rate;
+
+        if (total_size == 0)
+        {
+                printf("\n");
+                return;
+        }
 
         gettimeofday(&now, NULL);
 
