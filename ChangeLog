@@ -1,3 +1,10 @@
+2009-12-24  etanol  <diptongo@gmail.com>
+
+	* Canute v1.3
+
+	- Fixed a division by zero when transferring empty files (files
+	with zero size).
+
 2008-11-18  etanol  <diptongo@gmail.com>
 
 	* Canute v1.2
