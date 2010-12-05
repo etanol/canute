@@ -62,11 +62,11 @@ canute: $(Objects)
 
 canute.exe: $(HaseObjects)
 	@echo ' Linking   [win32] $@' && \
-	$(HCC) -L/usr/i586-mingw32msvc/lib $(LDFLAGS) -o $@ $^ -lwsock32
+	$(HCC) $(LDFLAGS) -o $@ $^ -lwsock32
 
 canute64.exe: $(HaseObjects64)
 	@echo ' Linking   [win64] $@' && \
-	$(HCC64) -L/usr/amd64-mingw32msvc/lib $(LDFLAGS) -o $@ $^ -lws2_32
+	$(HCC64) $(LDFLAGS) -o $@ $^ -lws2_32
 
 canute.dbg: $(Sources) $(Header)
 	@echo ' Building  [debug] $@' && \
