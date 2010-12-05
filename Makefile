@@ -119,6 +119,6 @@ help:
 	@echo 'NOTE: Enable custom optimization flags for the UNIX binary'
 	@echo '      defining the ARCH make variable. For example:'
 	@echo ''
-	@echo '		$(MAKE) "ARCH=-march=pentium-m -mfpmath=sse" unix'
+	@echo '	$(MAKE) "ARCH=-march=pentium-m -mfpmath=sse" unix'
 	@echo ''
 
