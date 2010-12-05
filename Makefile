@@ -13,9 +13,10 @@ UNAME := $(shell uname)
 
 CC       := gcc
 HCC      := i586-mingw32msvc-gcc
-CFLAGS   := -O3 -Wall -fomit-frame-pointer
+HCC64    := amd64-mingw32msvc-gcc
+CFLAGS   := -pipe -O3 -Wall -fomit-frame-pointer
 LDFLAGS  := -Wl,-s
-DBGFLAGS := -Wall -O0 -g -pg -DDEBUG
+DBGFLAGS := -pipe -Wall -O0 -g -pg -DDEBUG
 
 ifeq ($(UNAME),SunOS)
 	CC       := cc
@@ -40,18 +41,20 @@ ifeq ($(UNAME),OSF1)
 	DBGFLAGS := -DDEBUG -g
 endif
 
-Header      := canute.h
-Sources     := canute.c feedback.c net.c protocol.c util.c
-Objects     := $(Sources:.c=.o)
-HaseObjects := $(Sources:.c=.obj)
+Header        := canute.h
+Sources       := canute.c feedback.c net.c protocol.c util.c
+Objects       := $(Sources:.c=.o)
+HaseObjects   := $(Sources:.c=.obj)
+HaseObjects64 := $(Sources:.c=.obj64)
 
 # Phony targets
-.PHONY: unix hase debug clean help dist
+.PHONY: unix hase hase64 debug clean help dist
 
 # Target aliases
-unix : canute
-hase : canute.exe
-debug: canute.dbg
+unix  : canute
+hase  : canute.exe
+hase64: canute64.exe
+debug : canute.dbg
 
 # Binaries
 canute: $(Objects)
@@ -60,6 +63,10 @@ canute: $(Objects)
 canute.exe: $(HaseObjects)
 	@echo ' Linking   [win32] $@' && \
 	$(HCC) -L/usr/i586-mingw32msvc/lib $(LDFLAGS) -o $@ $^ -lwsock32
+
+canute64.exe: $(HaseObjects64)
+	@echo ' Linking   [win64] $@' && \
+	$(HCC64) -L/usr/amd64-mingw32msvc/lib $(LDFLAGS) -o $@ $^ -lws2_32
 
 canute.dbg: $(Sources) $(Header)
 	@echo ' Building  [debug] $@' && \
@@ -74,7 +81,10 @@ else
 endif
 
 %.obj: %.c $(Header)
-	@echo ' Compiling [win32] $@' && $(HCC) $(CFLAGS) -c -o $@ $< 
+	@echo ' Compiling [win32] $@' && $(HCC) $(CFLAGS) -c -o $@ $<
+
+%.obj64: %.c $(Header)
+	@echo ' Compiling [win64] $@' && $(HCC64) $(CFLAGS) -c -o $@ $<
 
 %.s: %.c $(Header)
 	@echo ' Assembling        $@' && $(CC) $(CFLAGS) $(ARCH) -S $<
@@ -94,16 +104,17 @@ dist:
 # Cleaning and help
 clean:
 	@-echo ' Cleaning objects and binaries' && \
-	rm -f $(Objects) $(HaseObjects) canute canute.exe canute.dbg
+	rm -f $(Objects) $(HaseObjects) $(HaseObjects64) canute canute.exe canute64.exe canute.dbg
 
 help:
 	@echo 'User targets:'
 	@echo ''
-	@echo '	unix  - Default target. Build the UNIX binary.'
-	@echo '	hase  - Build the Hasefroch binary (win32).'
-	@echo '	debug - Build the UNIX binary with debugging support.'
-	@echo '	clean - Clean objects and binaries.'
-	@echo '	help  - This help.'
+	@echo '	unix   - Default target. Build the UNIX binary.'
+	@echo '	hase   - Build the Hasefroch binary (win32).'
+	@echo '	hase64 - Build the Hasefroch binary (win64).'
+	@echo '	debug  - Build the UNIX binary with debugging support.'
+	@echo '	clean  - Clean objects and binaries.'
+	@echo '	help   - This help.'
 	@echo ''
 	@echo 'NOTE: Enable custom optimization flags for the UNIX binary'
 	@echo '      defining the ARCH make variable. For example:'
