@@ -4,10 +4,14 @@ TABLE OF CONTENTS
 1. About Canute
 2. Usage
 3. Compilation
+
    3.1. *Hasefroch*
+
 4. Protocol enhancements
+
    4.1. File modification time
    4.2. Executable bit
+
 5. Source code files
 6. Credits
 
@@ -23,25 +27,25 @@ For example, imagine you are with a friend and he has a big CD/DVD image you
 want (whatever Linux distro).  Depending on the operating systems you have,
 there are some ways of doing the copy:
 
-- FTP: Set up a server (you need root privileges for that) and then allow
+- **FTP:** Set up a server (you need root privileges for that) and then allow
   anonymous upload, create a new account for your friend or give him access
   using your account.  Don't forget a good FTP client
 
-- HTTP: Maybe handier than FTP but upload is a bit trickier.
+- **HTTP:** Maybe handier than FTP but upload is a bit trickier.
 
-- SFTP/SSH: This is account based so give new accounts or your own.
+- **SFTP/SSH:** This is account based so give new accounts or your own.
 
-- RSync: If you want to use it two way you need to transfer over SSH, then you
+- **RSync:** If you want to use it two way you need to transfer over SSH, then you
   are in the same situation as before.  Otherwise both of you should configure a
   server with the appropriate modules (which, again, requires root privileges).
 
-- NFS: *Hasefroch* does not easily support it.  This is not as hard as it used to
+- **NFS:** *Hasefroch* does not easily support it.  This is not as hard as it used to
   be thanks to the modern Linux distributions.  But you need at least two
   servers: the port mapper and the nfsd.  Not mentioning the kernel support, the
   permission grant from the server (/etc/hosts.allow), etc...  And it is quite
   slow for big files.
 
-- SMB: Very similar to NFS but slower.
+- **SMB:** Very similar to NFS but slower.
 
 - Finally, you could also waste a CD/DVD burning that ISO image and giving it to
   your friend.
@@ -61,13 +65,16 @@ transfer.
 Let's have host *A* and host *B*.  The following scenarios show the commands and the
 order in which must be executed:
 
-Scenario 1.
+**Scenario 1**
    *A* sends files to *B*.  This is the usual way of working. ::
+
       host_A$ canute send file1 file2 ...
       host_B$ canute get host_A
-Scenario 2.
+
+**Scenario 2**
    *A* sends files to *B*, but *A* is behind a firewall and cannot open ports
    (NAT/PAT). ::
+
       host_B$ canute getserv
       host_A$ canute sendto host_B file1 file2 ...
 
@@ -182,32 +189,41 @@ does not make sense.
 5. SOURCE CODE FILES
 ====================
 
-:canute.h:
+:``canute.h``:
    Dirty tricks to make the rest of the code portable and as #ifdef clean as
    possible.
 
-:canute.c:
+:``canute.c``:
    Main function.  Command line parsing and role selection (server-client,
    sender-receiver).
 
-:feedback.c:
+:``feedback.c``:
    User feedback module, progress bar, information and timing.
 
-:net.c:
+:``net.c``:
    Basic network management functions.  Connection handling, block transfer and
    message passing.
 
-:protocol.c:
+:``protocol.c``:
    Sender-receiver negotiations and content transfers.
 
-:util.c:
+:``util.c``:
    Unclassified utility functions.
 
 
 6. CREDITS
 ==========
 
-:Original idea and current maintenance: C2H5OH
-:Patch contributions and ideas: MKD_
-:Testing aid: MKD_, Tito Houzy, m3gumi, bl4d3
-:Initial win32 port: Plimo San
+:Original idea and current maintenance:
+   C2H5OH
+
+:Patch contributions and ideas:
+   MKD_
+
+:Testing aid:
+   MKD_, Tito Houzy, m3gumi, bl4d3
+
+:Initial win32 port:
+   Plimo San
+
+.. _MKD: http://www.claudiocamacho.com
