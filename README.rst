@@ -5,12 +5,12 @@ TABLE OF CONTENTS
 2. Usage
 3. Compilation
 
-   3.1. *Hasefroch*
+   3.1) *Hasefroch*
 
 4. Protocol enhancements
 
-   4.1. File modification time
-   4.2. Executable bit
+   4.1) File modification time
+   4.2) Executable bit
 
 5. Source code files
 6. Credits
@@ -190,7 +190,7 @@ does not make sense.
 ====================
 
 :``canute.h``:
-   Dirty tricks to make the rest of the code portable and as #ifdef clean as
+   Dirty tricks to make the rest of the code portable and as ``#ifdef`` clean as
    possible.
 
 :``canute.c``:
@@ -214,16 +214,9 @@ does not make sense.
 6. CREDITS
 ==========
 
-:Original idea and current maintenance:
-   C2H5OH
-
-:Patch contributions and ideas:
-   MKD_
-
-:Testing aid:
-   MKD_, Tito Houzy, m3gumi, bl4d3
-
-:Initial win32 port:
-   Plimo San
+:Original idea and current maintenance: C2H5OH
+:Major contributions and ideas: MKD_
+:Initial win32 port: Plimo San
+:Testing aid: MKD_, Tito Houzy, m3gumi, bl4d3
 
 .. _MKD: http://www.claudiocamacho.com
