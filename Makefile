@@ -12,8 +12,8 @@
 UNAME := $(shell uname)
 
 CC       := gcc
-HCC      := i586-mingw32msvc-gcc
-HCC64    := amd64-mingw32msvc-gcc
+HCC      := i686-w64-mingw32-gcc
+HCC64    := x86_64-w64-mingw32-gcc
 CFLAGS   := -O3 -Wall -fomit-frame-pointer
 LDFLAGS  := -Wl,-s
 DBGFLAGS := -Wall -O0 -g -pg -DDEBUG

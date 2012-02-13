@@ -51,12 +51,8 @@
 #define  IS_PATH_SEPARATOR(x) ((x) == '\\' || (x) == '/')
 #define  stat_info   __stat64
 #define  utime_info  _utimbuf
-#define  stat(path, buf)   _stat64((path), (buf))
 #define  utime(path, buf)  _utime((path), (buf))
 typedef int socklen_t;
-#ifndef __WIN64__
-extern int _stat64 (const char *path, struct __stat64 *buffer);
-#endif
 extern int fseeko  (FILE *stream, off_t offset, int whence);
 /* fseeko() implemented in util.c */
 
