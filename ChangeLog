@@ -1,3 +1,12 @@
+2012-02-13  etanol  <diptongo@gmail.com>
+
+	* Canute v1.4
+
+	- Port canute to 64-bit Windows by switching to the mingw-w64
+	cross-compiler.
+	- Enforce a radical transcoding of transferred file and directory
+	names to printable ASCII.
+
 2009-12-24  etanol  <diptongo@gmail.com>
 
 	* Canute v1.3
