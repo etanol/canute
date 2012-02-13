@@ -12,11 +12,12 @@ TABLE OF CONTENTS
    1) File modification time
    2) Executable bit
 
-5. Source code files
-6. Credits
+5. Protocol restrictions
+6. Source code files
+7. Credits
 
 
-1. ABOUT CANUTE
+1. About Canute
 ===============
 
 Canute is a small command line utility to transfer files and directories over
@@ -54,7 +55,7 @@ With Canute you use the same binary for all tasks: sending or receiving.  No
 need for installation, just the damn binary.
 
 
-2. USAGE
+2. Usage
 ========
 
 There are two pairs of concepts: server-client and sender-receiver.  The
@@ -99,11 +100,11 @@ When a directory path is provided as a command line argument, then is sent
 recursively.
 
 
-3. COMPILATION
+3. Compilation
 ==============
 
 Canute can now compile in many UNIX flavours, as well as in *Hasefroch* natively
-(both 32-bit and 64-bit) using MinGW.
+(both 32-bit and 64-bit) using MinGW-w64_.
 
 The Makefile is written using some GNU Make extensions (beware BSD users, do not
 forget to use ``gmake``).  If you are compiling within a GNU environment (GCC), as
@@ -120,26 +121,28 @@ enough to run ``gmake``.  Note that OSF1 (5.1 and above) testing has been
 dropped because we do not have access to any such platform anymore.  Other
 flavours (like AIX) may need additional tuning.  Porting patches are welcomed.
 
+.. _MinGW-w64: http://mingw-w64.sourceforge.net/
+
 
 3.1 Hasefroch (aka: Win32)
 --------------------------
 
-As a *Hasefroch* average user, you are not expected to be interested in this part
-because we already provide a binary.  But if you would like to patch Canute
-yourself and produce binaries for *Hasefroch* you can easily do so from UNIX by
-doing cross compilation.  Install MinGW (crossed) from your package manager and
-execute::
+As a *Hasefroch* average user, you are not expected to be interested in this
+part because a binary is usually provided.  But if you would like to patch
+Canute yourself and produce binaries for *Hasefroch* you can easily do so from
+UNIX by doing cross compilation.  Install MinGW-w64_ (crossed) from your package
+manager and execute::
 
    make hase
 
 If you want to do it in *Hasefroch*, get GNU Make from `Unix tools for Win32`__
-and MinGW.  Tune up a bit the ``Makefile`` and compile as you like.  The
+and MinGW-w64_.  Tune up a bit the ``Makefile`` and compile as you like.  The
 ``Makefile`` is very straightforward.
 
 __ http://unxutils.sourceforge.net
 
 
-4. PROTOCOL ENHANCEMENTS
+4. Protocol enhancements
 ========================
 
 Version 1.2 introduces some improvements on the protocol.  The previously
@@ -186,7 +189,26 @@ Obviously, the use of executable bit is disabled in *Hasefroch* builds as it
 does not make sense.
 
 
-5. SOURCE CODE FILES
+5. Protocol restrictions
+========================
+
+Sometimes, files and directories have names that contain characters that are not
+defined in the ASCII encoding, for example: ``pestiño soplón.txt``.  The way
+such names are stored in the filesystem varies widely from one operating system
+to another.  It may even be different on two installations of the same operating
+system.
+
+In order to just find out which encoding is beign used to store filenames, it is
+necessary to rely on platform dependent functionality.  Not to mention the
+transcoding step before and after transferring.
+
+Since Canute 1.4, filenames are converted to printable ASCII before sending
+them.  So in our previous example, they other end would recive something like
+``pesti~o sopl~n.txt`` as the filename.  The final result, again, depends on how
+the platform handles filenames.
+
+
+6. Source code files
 ====================
 
 :``canute.h``:
@@ -211,7 +233,7 @@ does not make sense.
    Unclassified utility functions.
 
 
-6. CREDITS
+7. Credits
 ==========
 
 :Original idea and current maintenance: C2H5OH
