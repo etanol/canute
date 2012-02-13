@@ -174,23 +174,23 @@ static void send_file (SOCKET    sk,
         int       e, reply;
         long long sent_bytes; /* Size reported remotely */
         size_t    b;
-        char     *bname;
+        char     *sname;
         FILE     *file;
 
-        bname = basename(name);
         file  = fopen(name, "rb");
         if (file == NULL)
         {
-                error("Cannot open file '%s'", bname);
+                error("Cannot open file '%s'", name);
                 return;
         }
 
-        send_message(sk, REQUEST_FILE, is_executable, mtime, size, bname);
+        sname = safename(name);
+        send_message(sk, REQUEST_FILE, is_executable, mtime, size, sname);
         reply = receive_message(sk, NULL, NULL, &sent_bytes, NULL);
         if (reply == REPLY_SKIP)
         {
                 fclose(file);
-                printf("--- Skipping file '%s'\n", bname);
+                printf("--- Skipping file '%s'\n", sname);
                 return;
         }
 
@@ -198,10 +198,10 @@ static void send_file (SOCKET    sk,
         {
                 e = fseeko(file, (off_t) sent_bytes, SEEK_SET);
                 if (e == -1)
-                        fatal("Could not seek file '%s'", bname);
+                        fatal("Could not seek file '%s'", sname);
         }
 
-        setup_progress(bname, size, sent_bytes);
+        setup_progress(sname, size, sent_bytes);
 
         while (sent_bytes < size)
         {
@@ -227,7 +227,7 @@ static void send_file (SOCKET    sk,
 void send_item (SOCKET sk, char *name)
 {
         int              e, reply, x_bit = 0;
-        char            *bname;
+        char            *sname;
         DIR             *dir;
         struct dirent   *dentry;
         struct stat_info st;
@@ -235,17 +235,16 @@ void send_item (SOCKET sk, char *name)
         e = stat(name, &st);
         if (e == -1)
         {
-                error("Cannot stat item '%s'", basename(name));
+                error("Cannot stat item '%s'", name);
                 return;
         }
 
         if (S_ISDIR(st.st_mode))
         {
-                bname = basename(name);
-                dir   = opendir(name);
+                dir = opendir(name);
                 if (dir == NULL)
                 {
-                        error("Cannot open dir '%s'", bname);
+                        error("Cannot open dir '%s'", name);
                         return;
                 }
 
@@ -253,23 +252,24 @@ void send_item (SOCKET sk, char *name)
                 if (e == -1)
                 {
                         closedir(dir);
-                        error("Cannot change to dir '%s'", bname);
+                        error("Cannot change to dir '%s'", name);
                         return;
                 }
 
-                send_message(sk, REQUEST_BEGINDIR, 0, 0, 0, bname);
+                sname = safename(name);
+                send_message(sk, REQUEST_BEGINDIR, 0, 0, 0, sname);
                 reply = receive_message(sk, NULL, NULL, NULL, NULL);
                 if (reply == REPLY_SKIP)
                 {
                         closedir(dir);
-                        printf("--- Skipping directory '%s'\n", bname);
+                        printf("--- Skipping directory '%s'\n", sname);
                         e = chdir("..");
                         if (e == -1)
                                 fatal("Could not change to parent directory");
                         return;
                 }
 
-                printf(">>> Entering directory '%s'\n", bname);
+                printf(">>> Entering directory '%s'\n", sname);
                 dentry = readdir(dir);
                 while (dentry != NULL)
                 {

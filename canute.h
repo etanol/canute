@@ -135,7 +135,7 @@ void send_item    (SOCKET sk, char *name);
 int  receive_item (SOCKET sk);
 
 /* util.c */
-char *basename  (char *path);
+char *safename  (char *path);
 void  error     (char *msg, ...);
 void  fatal     (char *msg, ...);
 void  help      (char *argv0);

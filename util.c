@@ -13,13 +13,15 @@
 
 
 /*
- * basename
+ * safename
  *
- * Strip absolute path. Similar to UNIX "basename" command but with a somewhat
- * dirty implementation.
+ * Find the basename of the given path (like the UNIX "basename" command) and
+ * replace unprintable and non-ASCII characters by the tilde ("~").  This severe
+ * enforncement eliminates any kind of filesystem dentry name transcoding issues.
  */
-char *basename (char *path)
+char *safename (char *path)
 {
+        char *c;
         int p = strlen(path) - 1;
 
         while (IS_PATH_SEPARATOR(path[p]))
@@ -31,6 +33,14 @@ char *basename (char *path)
                 p--;
         if (IS_PATH_SEPARATOR(path[p]))
                 p++;
+        /* Basename has been delimited, now replace unsafe characters */
+        c = path + p;
+        while (*c != '\0')
+        {
+                if (*c < ' ' || *c > '~')
+                        *c = '~';
+                c++;
+        }
         return path + p;
 }
 
