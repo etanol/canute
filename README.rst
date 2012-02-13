@@ -4,14 +4,10 @@ TABLE OF CONTENTS
 1. About Canute
 2. Usage
 3. Compilation
-
-   3.1) *Hasefroch*
-
+   #. *Hasefroch*
 4. Protocol enhancements
-
-   4.1) File modification time
-   4.2) Executable bit
-
+   #. File modification time
+   #. Executable bit
 5. Source code files
 6. Credits
 
