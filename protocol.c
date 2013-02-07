@@ -303,7 +303,7 @@ void send_item (SOCKET sk, char *name)
  */
 int receive_item (SOCKET sk)
 {
-        static char namebuf[CANUTE_NAME_LENGTH];
+        static char namebuf[CANUTE_NAME_LENGTH + 1];
         int         e, x_bit, mtime, request;
         long long   size;
 
